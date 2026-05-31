@@ -68,6 +68,8 @@ def search_common_paths(app_name: str) -> Optional[str]:
         "powershell": "powershell.exe",
         "explorer": "explorer.exe",
         "task manager": "taskmgr.exe",
+        "taskmanager": "taskmgr.exe",
+        "taskmgr": "taskmgr.exe",
         "recycle bin": "explorer.exe shell:RecycleBinFolder",
         "control panel": "control.exe",
         "file explorer": "explorer.exe",
