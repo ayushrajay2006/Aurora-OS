@@ -58,7 +58,7 @@ def search_common_paths(app_name: str) -> Optional[str]:
     """Fallbacks for hardcoded popular applications on Windows."""
     app_name_clean = app_name.lower().strip()
     
-    # Common system utilities & folder navigation commands
+    # Common system utilities, directories, and setting protocols
     system_utilities = {
         "notepad": "notepad.exe",
         "calculator": "calc.exe",
@@ -71,12 +71,36 @@ def search_common_paths(app_name: str) -> Optional[str]:
         "taskmanager": "taskmgr.exe",
         "taskmgr": "taskmgr.exe",
         "recycle bin": "explorer.exe shell:RecycleBinFolder",
+        "recyclebin": "explorer.exe shell:RecycleBinFolder",
         "control panel": "control.exe",
+        "controlpanel": "control.exe",
         "file explorer": "explorer.exe",
+        "fileexplorer": "explorer.exe",
         "documents": "explorer.exe shell:Personal",
         "downloads": "explorer.exe shell:Downloads",
         "this pc": "explorer.exe shell:MyComputerFolder",
-        "my computer": "explorer.exe shell:MyComputerFolder"
+        "my computer": "explorer.exe shell:MyComputerFolder",
+        "command prompt": "cmd.exe",
+        "commandprompt": "cmd.exe",
+        "settings": "start ms-settings:",
+        "system settings": "start ms-settings:",
+        "systemsettings": "start ms-settings:",
+        "registry editor": "regedit.exe",
+        "registryeditor": "regedit.exe",
+        "regedit": "regedit.exe",
+        "device manager": "devmgmt.msc",
+        "devicemanager": "devmgmt.msc",
+        "disk management": "diskmgmt.msc",
+        "diskmanagement": "diskmgmt.msc",
+        "snipping tool": "snippingtool.exe",
+        "snippingtool": "snippingtool.exe",
+        "microsoft edge": "msedge.exe",
+        "microsoftedge": "msedge.exe",
+        "edge": "msedge.exe",
+        "vs code": "code.exe",
+        "vscode": "code.exe",
+        "visual studio code": "code.exe",
+        "visualstudiocode": "code.exe"
     }
     
     if app_name_clean in system_utilities:
