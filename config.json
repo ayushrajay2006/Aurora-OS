@@ -1,0 +1,13 @@
+{
+    "ollama_host": "http://localhost:11434",
+    "model_name": "qwen2.5:14b",
+    "fallback_model": "qwen2.5:7b",
+    "db_path": "memory.db",
+    "logs_dir": "logs",
+    "log_file": "aurora.log",
+    "safety_thresholds": {
+        "low": "execute",
+        "medium": "approve",
+        "high": "verify"
+    }
+}
