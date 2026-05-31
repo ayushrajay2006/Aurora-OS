@@ -1,17 +1,63 @@
+import webbrowser
+import urllib.parse
+from typing import Dict, Any
 from tools.registry import registry, BaseTool
+from config.logging import logger
+
+# Friendly shortcuts mapping to absolute URLs
+WEBSITE_ALIASES = {
+    "youtube": "https://www.youtube.com",
+    "gmail": "https://mail.google.com",
+    "leetcode": "https://leetcode.com",
+    "google": "https://www.google.com",
+    "github": "https://github.com",
+    "chatgpt": "https://chatgpt.com",
+    "realpage": "https://www.realpage.com",
+    "reddit": "https://www.reddit.com",
+    "wikipedia": "https://www.wikipedia.org"
+}
 
 @registry.register(
     name="open_website",
-    description="Launches a website URL in the default browser.",
+    description="Launches a website URL or searches Google in the default browser.",
     args_schema={
         "url": {
             "type": "string",
-            "description": "The website URL or shortcut name to open (e.g., https://youtube.com, gmail)"
+            "description": "The website URL, shortcut (e.g., youtube, gmail, leetcode), or a search query."
         }
     },
     risk_level="medium"
 )
 class OpenWebsiteTool(BaseTool):
     def execute(self, url: str) -> dict:
-        # Stub to be fully implemented in Phase 3
-        return {"success": True, "output": f"Stub: request to open website '{url}' received."}
+        logger.info(f"Received request to open website or query: '{url}'")
+        
+        target_url = url.strip()
+        app_name_clean = target_url.lower()
+        
+        # 1. Resolve Friendly Shortcut Aliases
+        if app_name_clean in WEBSITE_ALIASES:
+            target_url = WEBSITE_ALIASES[app_name_clean]
+            logger.debug(f"Resolved friendly website shortcut: '{app_name_clean}' -> {target_url}")
+            
+        # 2. Check for absolute protocols
+        elif not target_url.startswith("http://") and not target_url.startswith("https://"):
+            # If it contains a dot and no spaces, treat it as a domain (e.g. google.com)
+            if "." in target_url and " " not in target_url:
+                target_url = "https://" + target_url
+                logger.debug(f"Prefixed domain with HTTPS: {target_url}")
+            else:
+                # 3. Google Search Fallback: Treat as a search query
+                encoded_query = urllib.parse.quote(target_url)
+                target_url = f"https://www.google.com/search?q={encoded_query}"
+                logger.info(f"Treating non-URL query as Google Search: '{url}' -> {target_url}")
+                
+        try:
+            # Open in user's default configured browser (Chrome, Brave, Edge, etc.)
+            webbrowser.open(target_url)
+            logger.info(f"Successfully opened website: {target_url}")
+            return {"success": True, "output": f"Successfully opened website: {target_url}"}
+        except Exception as e:
+            msg = f"Failed to open website '{target_url}': {e}"
+            logger.error(msg)
+            return {"success": False, "output": msg}
