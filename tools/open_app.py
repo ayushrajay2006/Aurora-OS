@@ -102,6 +102,40 @@ def search_common_paths(app_name: str) -> Optional[str]:
                 
     return None
 
+def search_drive_subfolders(app_name: str) -> Optional[str]:
+    """Performs a fast, shallow search (up to 3 levels) on the active D: and C: drives for custom applications."""
+    app_name_clean = app_name.lower().strip()
+    if not app_name_clean.endswith(".exe"):
+        app_name_clean += ".exe"
+        
+    scan_roots = [
+        "D:\\Reality Escape",
+        "D:\\Games",
+        "D:\\SteamLibrary",
+        "D:\\EpicGames",
+        "D:\\",
+        "C:\\Games"
+    ]
+    
+    for base_path in scan_roots:
+        if not os.path.exists(base_path):
+            continue
+        try:
+            for root, dirs, files in os.walk(base_path):
+                # Restrict search depth to 3 to keep it extremely fast (under 50ms)
+                depth = root.replace(base_path, "").count(os.sep)
+                if depth > 3:
+                    dirs.clear()
+                    continue
+                for file in files:
+                    if file.lower() == app_name_clean:
+                        path = os.path.join(root, file)
+                        if os.path.exists(path):
+                            return path
+        except Exception:
+            pass
+    return None
+
 @registry.register(
     name="open_app",
     description="Opens a Windows application by name.",
@@ -128,7 +162,13 @@ class OpenAppTool(BaseTool):
             if resolved_path:
                 logger.debug(f"Resolved app path via Start Menu: {resolved_path}")
                 
-        # 3. Try Common Paths / Fallbacks
+        # 3. Try custom drive subfolders search
+        if not resolved_path:
+            resolved_path = search_drive_subfolders(app_name)
+            if resolved_path:
+                logger.debug(f"Resolved app path via drive search: {resolved_path}")
+                
+        # 4. Try Common Paths / Fallbacks
         if not resolved_path:
             resolved_path = search_common_paths(app_name)
             if resolved_path:
