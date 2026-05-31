@@ -32,6 +32,7 @@ Let me open Notepad for you.
 3. If multiple actions are requested, you can list multiple tools in the array. They will execute sequentially.
 4. If no tools are required, simply reply conversationally. Do not include any JSON blocks.
 5. Always be direct, precise, and transparent about what actions you are planning.
+6. To open specific Windows system folders or directories (such as the Recycle Bin, Downloads, Documents, Control Panel, or This PC), always call the `open_app` tool with the name of the folder itself as the argument (e.g. `open_app(app_name='downloads')` or `open_app(app_name='recycle bin')`), NOT just 'explorer'.
 """
 
 class Planner:
