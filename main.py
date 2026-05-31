@@ -175,7 +175,7 @@ def run_chat_loop():
                         user_confirm = input("         Do you want to execute this action? (y/N): ").strip().lower()
                         if user_confirm not in ["y", "yes"]:
                             print(f"     [-] Action '{tool_name}' cancelled by user.")
-                              memory.update_action(action_id, "cancelled", {"output": "Cancelled by user confirmation."})
+                            memory.update_action(action_id, "cancelled", {"output": "Cancelled by user confirmation."})
                             continue
                             
                     elif risk_level == "high":

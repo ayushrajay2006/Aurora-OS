@@ -1,6 +1,7 @@
 import subprocess
 import time
 import requests
+import json
 from typing import List, Dict, Any, Optional, Generator
 from config.config import config
 from config.logging import logger
@@ -115,8 +116,8 @@ class OllamaClient:
                     content = chunk.get("message", {}).get("content", "")
                     if content:
                         yield content
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Failed to decode stream line: {e}")
 
 # Global Ollama client instance
 llm_client = OllamaClient()
