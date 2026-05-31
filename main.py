@@ -160,6 +160,11 @@ def run_chat_loop():
                 for idx, act in enumerate(actions, 1):
                     tool_name = act.get("tool")
                     args = act.get("args", {})
+                    
+                    # Ignore dummy/conversational None action blocks
+                    if not tool_name or str(tool_name).lower() in ["none", "null"]:
+                        continue
+                        
                     print(f"  {idx}. Tool: '{tool_name}' | Arguments: {args}")
                     
                     # Log planned tool call

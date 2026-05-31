@@ -58,7 +58,7 @@ def search_common_paths(app_name: str) -> Optional[str]:
     """Fallbacks for hardcoded popular applications on Windows."""
     app_name_clean = app_name.lower().strip()
     
-    # Common system utilities
+    # Common system utilities & folder navigation commands
     system_utilities = {
         "notepad": "notepad.exe",
         "calculator": "calc.exe",
@@ -67,7 +67,14 @@ def search_common_paths(app_name: str) -> Optional[str]:
         "cmd": "cmd.exe",
         "powershell": "powershell.exe",
         "explorer": "explorer.exe",
-        "task manager": "taskmgr.exe"
+        "task manager": "taskmgr.exe",
+        "recycle bin": "explorer.exe shell:RecycleBinFolder",
+        "control panel": "control.exe",
+        "file explorer": "explorer.exe",
+        "documents": "explorer.exe shell:Personal",
+        "downloads": "explorer.exe shell:Downloads",
+        "this pc": "explorer.exe shell:MyComputerFolder",
+        "my computer": "explorer.exe shell:MyComputerFolder"
     }
     
     if app_name_clean in system_utilities:
