@@ -5,7 +5,7 @@ from config.config import config
 from config.logging import logger
 from config.state import state_manager
 from brain.llm import llm_client
-from brain.planner import planner
+from brain.planner import planner, SYSTEM_PROMPT_TEMPLATE
 from memory.memory import memory
 # Ensure tools are imported so they register themselves
 import tools.open_app
@@ -61,7 +61,7 @@ def verify_ollama_setup() -> bool:
     return True
 
 def run_chat_loop():
-    print("\n[+] Jarvis (Aurora V1) Foundation is fully operational!")
+    print("\n[+] Aurora is fully operational!")
     print("Type your message to chat, or type 'exit' or 'quit' to close.")
     print("-" * 60)
     
@@ -84,14 +84,67 @@ def run_chat_loop():
             memory.save_message("user", user_input)
             state_manager.add_message("user", user_input)
             
-            print("Aurora > Thinking...", end="\r")
+            print("Aurora > ", end="", flush=True)
             state_manager.update_state(status="Thinking")
             
-            # Request plan from Planner
-            reply, actions = planner.create_plan(user_input, chat_history)
+            # Construct the prompts dynamically
+            tools_schema = planner._get_tools_schema_text()
+            system_prompt = SYSTEM_PROMPT_TEMPLATE.format(tools_schema_text=tools_schema)
             
-            # Print response
-            print("Aurora >", reply)
+            messages = [{"role": "system", "content": system_prompt}]
+            messages.extend(chat_history)
+            messages.append({"role": "user", "content": user_input})
+            
+            # Real-time token streaming with backtick-buffering filter
+            full_text = ""
+            buffer = ""
+            json_started = False
+            
+            try:
+                stream = llm_client.chat(messages, stream=True)
+                for chunk in stream:
+                    full_text += chunk
+                    if json_started:
+                        continue
+                        
+                    buffer += chunk
+                    if "```json" in buffer:
+                        json_started = True
+                        parts = buffer.split("```json")
+                        sys.stdout.write(parts[0])
+                        sys.stdout.flush()
+                        buffer = ""
+                    elif buffer.startswith("`") or "`" in buffer:
+                        if len(buffer) < 7:
+                            continue
+                        else:
+                            if not "```json".startswith(buffer[:len(buffer)]):
+                                sys.stdout.write(buffer)
+                                sys.stdout.flush()
+                                buffer = ""
+                    else:
+                        sys.stdout.write(buffer)
+                        sys.stdout.flush()
+                        buffer = ""
+                        
+                # Flush any remaining buffer if json wasn't started
+                if buffer and not json_started:
+                    sys.stdout.write(buffer)
+                    sys.stdout.flush()
+                
+                # Print newline to end the Aurora response line neatly
+                print()
+                
+            except Exception as e:
+                print() # clear line
+                logger.error(f"Ollama streaming chat failed: {e}", exc_info=True)
+                print(f"Aurora > Error communicating with LLM service: {e}")
+                continue
+                
+            # Parse the full text for actions
+            reply, actions = planner.parse_response(full_text)
+            
+            # Save to memory and state
             memory.save_message("assistant", reply)
             state_manager.add_message("assistant", reply)
             
@@ -122,7 +175,7 @@ def run_chat_loop():
                         user_confirm = input("         Do you want to execute this action? (y/N): ").strip().lower()
                         if user_confirm not in ["y", "yes"]:
                             print(f"     [-] Action '{tool_name}' cancelled by user.")
-                            memory.update_action(action_id, "cancelled", {"output": "Cancelled by user confirmation."})
+                              memory.update_action(action_id, "cancelled", {"output": "Cancelled by user confirmation."})
                             continue
                             
                     elif risk_level == "high":
@@ -152,7 +205,7 @@ def run_chat_loop():
 
 def main():
     print_banner()
-    logger.info("Starting Jarvis (Aurora V1) Foundation...")
+    logger.info("Starting Aurora...")
     
     if not verify_ollama_setup():
         sys.exit(1)
