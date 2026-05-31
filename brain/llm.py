@@ -46,7 +46,7 @@ class OllamaClient:
             return False
 
     def check_model_present(self, model_name: str) -> bool:
-        """Checks if the specified model is pulled in Ollama."""
+        """Checks if the specified model is pulled in Ollama with strict tag validation."""
         try:
             res = requests.get(f"{self.host}/api/tags", timeout=3)
             if res.status_code != 200:
@@ -55,11 +55,14 @@ class OllamaClient:
             data = res.json()
             models = data.get("models", [])
             
-            # Match standard name or standard name with latest/tag
             target = model_name.lower()
             for m in models:
                 name = m.get("name", "").lower()
-                if name == target or name.split(":")[0] == target.split(":")[0]:
+                # 1. Exact match (e.g. "qwen2.5:7b" == "qwen2.5:7b")
+                if name == target:
+                    return True
+                # 2. Base match if target has no tag and model has "latest" tag
+                if ":" not in target and name == f"{target}:latest":
                     return True
             return False
         except Exception as e:
