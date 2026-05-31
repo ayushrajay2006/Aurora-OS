@@ -5,13 +5,13 @@ DEFAULT_CONFIG = {
     "ollama_host": "http://localhost:11434",
     "model_name": "qwen2.5:14b",
     "fallback_model": "qwen2.5:7b",
-    "db_path": "memory.db",
+    "db_path": os.path.join("memory", "memory.db"),
     "logs_dir": "logs",
     "log_file": "aurora.log",
     "safety_thresholds": {
-        "low": "execute",      # low risk executes automatically
-        "medium": "approve",   # medium risk prompts for [Approve] / [Reject]
-        "high": "verify"       # high risk requires typing a validation string
+        "low": "execute",
+        "medium": "approve",
+        "high": "verify"
     }
 }
 
@@ -28,7 +28,6 @@ class Config:
                     user_settings = json.load(f)
                     self.settings.update(user_settings)
             except Exception:
-                # Fallback to default if there is a parsing error
                 pass
         else:
             self.save()
@@ -71,5 +70,5 @@ class Config:
     def safety_thresholds(self) -> dict:
         return self.get("safety_thresholds")
 
-# Global configuration instance
+# Global config instance
 config = Config()

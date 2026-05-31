@@ -3,12 +3,15 @@ import sqlite3
 import json
 import time
 from typing import List, Dict, Any, Optional
-from aurora.config import config
-from aurora.logging import logger
+from config.config import config
+from config.logging import logger
 
 class Memory:
     def __init__(self):
         self.db_path = config.db_path
+        db_dir = os.path.dirname(self.db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:

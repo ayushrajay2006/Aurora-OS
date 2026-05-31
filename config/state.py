@@ -36,7 +36,6 @@ class StateManager:
 
     def get_state(self) -> AppState:
         with self._lock:
-            # Return a shallow copy of messages/actions/logs to avoid mutation issues in threads
             return AppState(
                 status=self._state.status,
                 model_name=self._state.model_name,
@@ -77,7 +76,6 @@ class StateManager:
         with self._lock:
             timestamp = time.strftime("%H:%M:%S")
             self._state.tool_logs.append(f"[{timestamp}] {log_msg}")
-            # Keep log buffer capped to prevent memory bloat in UI
             if len(self._state.tool_logs) > 100:
                 self._state.tool_logs.pop(0)
             self._state.last_update = time.time()
@@ -102,7 +100,7 @@ class StateManager:
         with self._lock:
             self._state.pending_confirmation = {
                 "action_id": action_id,
-                "action_type": action_type, # "medium" (approve/reject) or "high" (type text)
+                "action_type": action_type,
                 "description": description,
                 "expected_input": expected_input
             }
