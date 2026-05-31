@@ -113,8 +113,29 @@ def run_chat_loop():
                     action_id = f"act_{int(time.time())}_{idx}"
                     memory.log_action(action_id, tool_name, args, "planned")
                     
-                    # Execute tool stub (Phase 1 does not run them, just demonstrates registry routing)
-                    print(f"     [*] Executing '{tool_name}' stub...")
+                    # Safety gates based on risk level
+                    tool = registry.get_tool(tool_name)
+                    risk_level = tool.risk_level if tool else "low"
+                    
+                    if risk_level == "medium":
+                        print(f"     [!] CONFIRMATION REQUIRED: Aurora wants to run '{tool_name}' with args {args}.")
+                        user_confirm = input("         Do you want to execute this action? (y/N): ").strip().lower()
+                        if user_confirm not in ["y", "yes"]:
+                            print(f"     [-] Action '{tool_name}' cancelled by user.")
+                            memory.update_action(action_id, "cancelled", {"output": "Cancelled by user confirmation."})
+                            continue
+                            
+                    elif risk_level == "high":
+                        print(f"     [!] HIGH RISK ACTION: Aurora wants to run '{tool_name}' with args {args}.")
+                        expected_input = "DELETE" if "delete" in tool_name.lower() else "EXECUTE"
+                        user_confirm = input(f"         Please type '{expected_input}' to continue: ").strip()
+                        if user_confirm != expected_input:
+                            print(f"     [-] Action '{tool_name}' aborted (verification mismatch).")
+                            memory.update_action(action_id, "cancelled", {"output": "Aborted: verification mismatch."})
+                            continue
+                    
+                    # Execute tool
+                    print(f"     [*] Executing '{tool_name}'...")
                     state_manager.update_state(status="Executing")
                     res = registry.execute_tool(tool_name, args)
                     print(f"     [Result] Success={res.get('success')} | Output='{res.get('output')}'")
