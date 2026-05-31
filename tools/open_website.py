@@ -14,7 +14,8 @@ WEBSITE_ALIASES = {
     "chatgpt": "https://chatgpt.com",
     "realpage": "https://www.realpage.com",
     "reddit": "https://www.reddit.com",
-    "wikipedia": "https://www.wikipedia.org"
+    "wikipedia": "https://www.wikipedia.org",
+    "instagram": "https://www.instagram.com"
 }
 
 @registry.register(
