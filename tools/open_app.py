@@ -234,3 +234,116 @@ class OpenAppTool(BaseTool):
             msg = f"Failed to open '{app_name}': {e}"
             logger.error(msg)
             return {"success": False, "output": msg}
+
+def close_process_by_name(name: str) -> dict:
+    """Closes a process or application on Windows by name using taskkill."""
+    name_clean = name.strip()
+    if not name_clean:
+        return {"success": False, "output": "Empty process name provided."}
+
+    # Gather potential executable names to terminate
+    targets = []
+    
+    # 1. As-is
+    targets.append(name_clean)
+    
+    # 2. As-is with .exe appended if no extension
+    if not name_clean.lower().endswith(".exe"):
+        targets.append(f"{name_clean}.exe")
+        
+    # 3. Handle common aliases and spaced names
+    # e.g., "Epic Games Launcher" -> "EpicGamesLauncher.exe"
+    # "task manager" -> "taskmgr.exe"
+    alias_map = {
+        "epic games launcher": "EpicGamesLauncher.exe",
+        "epicgameslauncher": "EpicGamesLauncher.exe",
+        "chrome": "chrome.exe",
+        "discord": "Discord.exe",
+        "vs code": "Code.exe",
+        "vscode": "Code.exe",
+        "notepad": "notepad.exe",
+        "calculator": "calc.exe",
+        "task manager": "taskmgr.exe",
+        "taskmanager": "taskmgr.exe"
+    }
+    
+    alias_key = name_clean.lower()
+    if alias_key in alias_map:
+        alias_target = alias_map[alias_key]
+        if alias_target not in targets:
+            targets.append(alias_target)
+            
+    # Remove duplicates but keep order
+    unique_targets = []
+    for t in targets:
+        if t not in unique_targets:
+            unique_targets.append(t)
+            
+    logger.debug(f"Resolved process targets for '{name}': {unique_targets}")
+    
+    # Run taskkill for each target
+    success_count = 0
+    errors = []
+    
+    for target in unique_targets:
+        try:
+            # /f forces termination, /im specifies image name
+            res = subprocess.run(
+                ["taskkill", "/f", "/im", target],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            if res.returncode == 0:
+                success_count += 1
+                logger.info(f"Successfully closed process matching: '{target}'")
+            else:
+                # Store the error but keep trying others
+                errors.append(f"'{target}': {res.stderr.strip()}")
+        except Exception as e:
+            errors.append(f"Failed to execute taskkill for '{target}': {e}")
+            
+    if success_count > 0:
+        return {
+            "success": True,
+            "output": f"Successfully closed running instances of '{name}'."
+        }
+    else:
+        # If nothing succeeded, return failure details
+        err_msg = "; ".join(errors) if errors else "Process not found or not running."
+        return {
+            "success": False,
+            "output": f"Could not close '{name}': {err_msg}"
+        }
+
+@registry.register(
+    name="close_app",
+    description="Closes a running Windows application or process by name.",
+    args_schema={
+        "app_name": {
+            "type": "string",
+            "description": "Name of the application or process to close (e.g., Chrome, Discord, Epic Games Launcher, Notepad)"
+        }
+    },
+    risk_level="medium"
+)
+class CloseAppTool(BaseTool):
+    def execute(self, app_name: str) -> dict:
+        logger.info(f"Attempting to close application: '{app_name}'")
+        return close_process_by_name(app_name)
+
+@registry.register(
+    name="close_process",
+    description="Closes a running process by name.",
+    args_schema={
+        "process_name": {
+            "type": "string",
+            "description": "Name of the process or executable to close (e.g., chrome.exe, Discord.exe, EpicGamesLauncher.exe)"
+        }
+    },
+    risk_level="medium"
+)
+class CloseProcessTool(BaseTool):
+    def execute(self, process_name: str) -> dict:
+        logger.info(f"Attempting to close process: '{process_name}'")
+        return close_process_by_name(process_name)
