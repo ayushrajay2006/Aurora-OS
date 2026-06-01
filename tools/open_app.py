@@ -371,7 +371,7 @@ def close_process_by_name(name: str) -> dict:
     args_schema={
         "app_name": {
             "type": "string",
-            "description": "Name of the application or process to close (e.g., Chrome, Discord, Epic Games Launcher, Notepad)"
+            "description": "Name of the application or process exactly as requested by the user. Do not guess or modify the name; pass the raw name as provided (e.g. 'Valorant Tracker', 'Chrome') so that the tool's internal fuzzy process scanner can resolve the correct executable dynamically."
         }
     },
     risk_level="medium"
@@ -387,7 +387,7 @@ class CloseAppTool(BaseTool):
     args_schema={
         "process_name": {
             "type": "string",
-            "description": "Name of the process or executable to close (e.g., chrome.exe, Discord.exe, EpicGamesLauncher.exe)"
+            "description": "Name of the process or executable to close. If the user provided a generic application name rather than a specific filename, pass that name exactly as requested without guessing the executable filename or extension (e.g., 'Valorant Tracker') so the internal fuzzy scanner can resolve it dynamically."
         }
     },
     risk_level="medium"
