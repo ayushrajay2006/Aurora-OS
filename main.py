@@ -11,6 +11,7 @@ from memory.memory import memory
 import tools.open_app
 import tools.open_website
 import tools.search_files
+import tools.read_pdf
 from tools.registry import registry
 
 def print_banner():
