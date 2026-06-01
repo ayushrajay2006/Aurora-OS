@@ -10,6 +10,7 @@ from memory.memory import memory
 # Ensure tools are imported so they register themselves
 import tools.open_app
 import tools.open_website
+import tools.search_files
 from tools.registry import registry
 
 def print_banner():
