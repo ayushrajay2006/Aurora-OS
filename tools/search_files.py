@@ -34,6 +34,9 @@ class SearchFilesTool(BaseTool):
             os.path.join(user_profile, "Desktop"),
             os.path.join(user_profile, "Downloads"),
             os.path.join(user_profile, "Documents"),
+            os.path.join(user_profile, "Pictures"),
+            os.path.join(user_profile, "Videos"),
+            os.path.join(user_profile, "Music"),
             "D:\\"
         ]
         
