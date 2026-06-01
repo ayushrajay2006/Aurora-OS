@@ -29,10 +29,14 @@ Let me open Notepad for you.
   }}
 ]
 ```
-3. If multiple actions are requested, you can list multiple tools in the array. They will execute sequentially.
-4. If no tools are required, simply reply conversationally. Do not include any JSON blocks.
-5. Always be direct, precise, and transparent about what actions you are planning.
-6. To open specific Windows system folders or directories (such as the Recycle Bin, Downloads, Documents, Control Panel, or This PC), always call the `open_app` tool with the name of the folder itself as the argument (e.g. `open_app(app_name='downloads')` or `open_app(app_name='recycle bin')`), NOT just 'explorer'.
+3. **State-Dependent Planning Constraint**: If a tool call depends on the output of a preceding tool call (for example, you need to find a file path using `search_files` before you can call `summarize_file` or `read_file` on it):
+   - **DO NOT** plan both tools in a single turn.
+   - **DO NOT** use placeholder paths like `"/path/to/file"` or empty strings `""` for arguments.
+   - Instead, plan **ONLY the first tool** (e.g., `search_files`) and wait for the user to return the execution result. Once the real path is returned to you in the next chat turn, you can then plan the subsequent tool (e.g., `summarize_file`) using the real, actual file path.
+4. Only plan multiple tool calls in a single turn if they are completely **independent** or if the arguments for all tools are already known with 100% certainty (e.g., `open_app("notepad")` and `open_app("calc")`).
+5. If no tools are required, simply reply conversationally. Do not include any JSON blocks.
+6. Always be direct, precise, and transparent about what actions you are planning.
+7. To open specific Windows system folders or directories (such as the Recycle Bin, Downloads, Documents, Control Panel, or This PC), always call the `open_app` tool with the name of the folder itself as the argument (e.g. `open_app(app_name='downloads')` or `open_app(app_name='recycle bin')`), NOT just 'explorer'.
 """
 
 class Planner:
