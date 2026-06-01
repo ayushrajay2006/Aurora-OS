@@ -202,7 +202,7 @@ def run_chat_loop():
                     
             state_manager.update_state(status="Online")
             
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, EOFError):
             print("\nClosing Aurora. Goodbye!")
             break
         except Exception as e:

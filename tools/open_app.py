@@ -72,20 +72,20 @@ def search_common_paths(app_name: str) -> Optional[str]:
         "taskmgr": "taskmgr.exe",
         "recycle bin": "explorer.exe shell:RecycleBinFolder",
         "recyclebin": "explorer.exe shell:RecycleBinFolder",
-        "screenshots": "explorer.exe shell:My Pictures\\\\Screenshots",
-        "screenshots folder": "explorer.exe shell:My Pictures\\\\Screenshots",
-        "pictures": "explorer.exe shell:My Pictures",
-        "pictures folder": "explorer.exe shell:My Pictures",
-        "videos": "explorer.exe shell:My Video",
-        "videos folder": "explorer.exe shell:My Video",
-        "music": "explorer.exe shell:My Music",
-        "music folder": "explorer.exe shell:My Music",
+        "screenshots": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Pictures", "Screenshots"),
+        "screenshots folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Pictures", "Screenshots"),
+        "pictures": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Pictures"),
+        "pictures folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Pictures"),
+        "videos": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Videos"),
+        "videos folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Videos"),
+        "music": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Music"),
+        "music folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Music"),
         "control panel": "control.exe",
         "controlpanel": "control.exe",
         "file explorer": "explorer.exe",
         "fileexplorer": "explorer.exe",
-        "documents": "explorer.exe shell:Personal",
-        "downloads": "explorer.exe shell:Downloads",
+        "documents": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Documents"),
+        "downloads": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Downloads"),
         "this pc": "explorer.exe shell:MyComputerFolder",
         "my computer": "explorer.exe shell:MyComputerFolder",
         "command prompt": "cmd.exe",
@@ -172,11 +172,11 @@ def search_drive_subfolders(app_name: str) -> Optional[str]:
 
 @registry.register(
     name="open_app",
-    description="Opens a Windows application by name.",
+    description="Opens a Windows application or common system folder by name.",
     args_schema={
         "app_name": {
             "type": "string",
-            "description": "Name of the application to launch (e.g., Chrome, Discord, VS Code, Notepad, Calculator)"
+            "description": "Name of the application or folder to launch (e.g., Chrome, Discord, VS Code, Notepad, Calculator, Downloads, Documents, Pictures, Screenshots)"
         }
     },
     risk_level="medium"
