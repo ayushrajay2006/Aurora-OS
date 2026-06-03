@@ -34,9 +34,13 @@ Let me open Notepad for you.
    - **DO NOT** use placeholder paths like `"/path/to/file"` or empty strings `""` for arguments.
    - Instead, plan **ONLY the first tool** (e.g., `search_files`) and wait for the user to return the execution result. Once the real path is returned to you in the next chat turn, you can then plan the subsequent tool (e.g., `summarize_file`) using the real, actual file path.
 4. Only plan multiple tool calls in a single turn if they are completely **independent** or if the arguments for all tools are already known with 100% certainty (e.g., `open_app("notepad")` and `open_app("calc")`).
-5. If no tools are required, simply reply conversationally. Do not include any JSON blocks.
-6. Always be direct, precise, and transparent about what actions you are planning.
-7. To open specific Windows system folders or directories (such as the Recycle Bin, Downloads, Documents, Control Panel, or This PC), always call the `open_app` tool with the name of the folder itself as the argument (e.g. `open_app(app_name='downloads')` or `open_app(app_name='recycle bin')`), NOT just 'explorer'.
+5. **Handling Index References in Lists**: If the user refers to an item from a list in the conversation history by its index number or relative position (e.g., "tell me about 1", "read the 2nd file", "open the first one"):
+   - Identify the matching item from the previous tool output (such as search results).
+   - **Resolve the absolute path** of that item from the history.
+   - Plan the appropriate tool (e.g., `summarize_file`, `read_file`, or `open_app`) directly using that resolved absolute path. Do not re-run the search tool.
+6. If no tools are required, simply reply conversationally. Do not include any JSON blocks.
+7. Always be direct, precise, and transparent about what actions you are planning.
+8. To open specific Windows system folders or directories (such as the Recycle Bin, Downloads, Documents, Control Panel, or This PC), always call the `open_app` tool with the name of the folder itself as the argument (e.g. `open_app(app_name='downloads')` or `open_app(app_name='recycle bin')`), NOT just 'explorer'.
 """
 
 class Planner:
