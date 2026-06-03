@@ -14,6 +14,9 @@ You have access to a suite of system tools. To call tools, you MUST format your 
 Available Tools:
 {tools_schema_text}
 
+## Stored Long-Term Memories & Preferences:
+{memories_text}
+
 Execution Rules:
 1. Identify if the user's intent requires running any of the available tools.
 2. If tools are required, write a markdown JSON code block containing an array of tool calls.

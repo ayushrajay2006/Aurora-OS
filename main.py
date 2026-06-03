@@ -12,6 +12,7 @@ import tools.open_app
 import tools.open_website
 import tools.search_files
 import tools.read_pdf
+import tools.memory_control
 from tools.registry import registry
 
 def print_banner():
@@ -89,9 +90,19 @@ def run_chat_loop():
             print("Aurora > ", end="", flush=True)
             state_manager.update_state(status="Thinking")
             
+            # Retrieve long term memories to inject into system prompt
+            all_facts = memory.get_all_facts()
+            if all_facts:
+                memories_text = "\n".join([f"- {k}: {v}" for k, v in all_facts.items()])
+            else:
+                memories_text = "No long-term memories stored yet."
+
             # Construct the prompts dynamically
             tools_schema = planner._get_tools_schema_text()
-            system_prompt = SYSTEM_PROMPT_TEMPLATE.format(tools_schema_text=tools_schema)
+            system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+                tools_schema_text=tools_schema,
+                memories_text=memories_text
+            )
             
             messages = [{"role": "system", "content": system_prompt}]
             messages.extend(chat_history)
