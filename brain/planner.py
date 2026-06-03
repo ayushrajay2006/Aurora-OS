@@ -97,8 +97,18 @@ class Planner:
         Generates a plan from user prompt, querying Ollama.
         Returns conversational reply and parsed planned actions list.
         """
+        from memory.memory import memory
+        all_facts = memory.get_all_facts()
+        if all_facts:
+            memories_text = "\n".join([f"- {k}: {v}" for k, v in all_facts.items()])
+        else:
+            memories_text = "No long-term memories stored yet."
+
         tools_schema = self._get_tools_schema_text()
-        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(tools_schema_text=tools_schema)
+        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+            tools_schema_text=tools_schema,
+            memories_text=memories_text
+        )
         
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend(history)
