@@ -83,7 +83,7 @@ class Memory:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
-                    "SELECT role, content, timestamp FROM conversation ORDER BY id ASC LIMIT ?",
+                    "SELECT role, content, timestamp FROM (SELECT id, role, content, timestamp FROM conversation ORDER BY id DESC LIMIT ?) ORDER BY id ASC",
                     (limit,)
                 )
                 rows = cursor.fetchall()

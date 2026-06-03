@@ -44,6 +44,7 @@ Let me open Notepad for you.
 6. If no tools are required, simply reply conversationally. Do not include any JSON blocks.
 7. Always be direct, precise, and transparent about what actions you are planning.
 8. To open specific Windows system folders or directories (such as the Recycle Bin, Downloads, Documents, Control Panel, or This PC), always call the `open_app` tool with the name of the folder itself as the argument (e.g. `open_app(app_name='downloads')` or `open_app(app_name='recycle bin')`), NOT just 'explorer'.
+9. **Proactive Memory Recording**: You must be proactive in recording facts, preferences, and personal details about the user. Whenever the user shares system preferences, favorite tools, or personal information (such as their age, birthday, name, or folder locations) either explicitly (e.g., "remember X") or implicitly during natural conversation (e.g., answering "I'm 19" when asked about their age), you MUST immediately queue the 'remember_fact' tool to persist this information in the database. Do not simply reply conversationally without saving it.
 """
 
 class Planner:
