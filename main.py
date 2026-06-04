@@ -85,6 +85,7 @@ def run_chat_loop():
                 
             # Log and save message
             memory.save_message("user", user_input)
+            chat_history.append({"role": "user", "content": user_input})
             state_manager.add_message("user", user_input)
             
             state_manager.update_state(status="Thinking")
@@ -95,18 +96,6 @@ def run_chat_loop():
                 memories_text = "\n".join([f"- {k}: {v}" for k, v in all_facts.items()])
             else:
                 memories_text = "No long-term memories stored yet."
-
-            # Construct the prompts dynamically
-            tools_schema = planner._get_tools_schema_text()
-            system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
-                tools_schema_text=tools_schema,
-                memories_text=memories_text
-            )
-            
-            # Message list for this multi-step turn
-            messages = [{"role": "system", "content": system_prompt}]
-            messages.extend(chat_history)
-            messages.append({"role": "user", "content": user_input})
             
             MAX_STEPS = 5
             step = 1
@@ -114,6 +103,17 @@ def run_chat_loop():
             
             while step <= MAX_STEPS:
                 state_manager.update_state(status="Thinking")
+                
+                # Construct the prompts dynamically
+                tools_schema = planner._get_tools_schema_text()
+                system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+                    tools_schema_text=tools_schema,
+                    memories_text=memories_text
+                )
+                
+                # Message list for this step (dynamically updated with complete history)
+                messages = [{"role": "system", "content": system_prompt}]
+                messages.extend(chat_history)
                 
                 # Dynamic visual step header
                 if step == 1:
@@ -167,15 +167,20 @@ def run_chat_loop():
                     print(f"Aurora > Error communicating with LLM service: {e}")
                     break
                     
+                # Save assistant's raw generation (including JSON) to database and chat_history
+                memory.save_message("assistant", full_text)
+                chat_history.append({"role": "assistant", "content": full_text})
+                
                 # Parse the full text for actions
                 reply, actions = planner.parse_response(full_text)
                 
-                # If there is conversational text, accumulate it
+                # If there is conversational text, accumulate it and update state manager
                 if reply:
                     if final_reply:
                         final_reply += "\n\n" + reply
                     else:
                         final_reply = reply
+                    state_manager.add_message("assistant", reply)
                 
                 # Filter out null/None actions
                 valid_actions = []
@@ -241,23 +246,14 @@ def run_chat_loop():
                     memory.update_action(action_id, "success" if success else "failed", res)
                     tool_results.append(f"- Tool '{tool_name}' completed. Success={success}. Output: {output}")
                     
-                # Append tool outputs to messages list for the next loop execution
-                messages.append({"role": "assistant", "content": full_text})
-                
+                # Save execution results to database and chat_history
                 results_text = "\n".join(tool_results)
-                messages.append({"role": "user", "content": f"Execution Results:\n{results_text}"})
+                memory.save_message("user", f"Execution Results:\n{results_text}")
+                chat_history.append({"role": "user", "content": f"Execution Results:\n{results_text}"})
                 
                 step += 1
                 
-            # Loop ended or capped. Save final conversational reply to SQLite and history
-            if not final_reply:
-                final_reply = "I have completed all planned operations."
-                
-            memory.save_message("assistant", final_reply)
-            state_manager.add_message("assistant", final_reply)
-            
-            chat_history.append({"role": "user", "content": user_input})
-            chat_history.append({"role": "assistant", "content": final_reply})
+            # Maintain chat history window size
             if len(chat_history) > 30:
                 chat_history = chat_history[-30:]
                 
