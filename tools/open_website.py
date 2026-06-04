@@ -46,14 +46,25 @@ class OpenWebsiteTool(BaseTool):
             target_url = WEBSITE_ALIASES[app_name_clean]
             logger.debug(f"Resolved friendly website shortcut: '{app_name_clean}' -> {target_url}")
             
-        # 2. Check for absolute protocols
+        # 2. Check for absolute local paths or file URIs
+        import os
+        import pathlib
+        if os.path.isabs(target_url) or target_url.startswith("\\\\"):
+            target_url = pathlib.Path(target_url).as_uri()
+            logger.info(f"Resolved absolute local path to file URI: {target_url}")
+            
+        elif target_url.startswith("file://"):
+            # Local file protocol, keep as is
+            logger.debug(f"Identified file URI: {target_url}")
+            
+        # 3. Check for absolute protocols (http, https)
         elif not target_url.startswith("http://") and not target_url.startswith("https://"):
             # If it contains a dot and no spaces, treat it as a domain (e.g. google.com)
             if "." in target_url and " " not in target_url:
                 target_url = "https://" + target_url
                 logger.debug(f"Prefixed domain with HTTPS: {target_url}")
             else:
-                # 3. Google Search Fallback: Treat as a search query
+                # 4. Google Search Fallback: Treat as a search query
                 encoded_query = urllib.parse.quote(target_url)
                 target_url = f"https://www.google.com/search?q={encoded_query}"
                 logger.info(f"Treating non-URL query as Google Search: '{url}' -> {target_url}")
