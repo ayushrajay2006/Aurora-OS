@@ -148,6 +148,8 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
             print() # clear line
             logger.error(f"Ollama streaming chat failed: {e}", exc_info=True)
             print(f"Aurora > Error communicating with LLM service: {e}")
+            if voice_output and tts_manager:
+                tts_manager.speak("Sorry, I encountered an error communicating with my brain service.")
             break
             
         # Save assistant's raw generation (including JSON) to database and chat_history
@@ -411,6 +413,8 @@ def run_voice_activation_loop(tts_manager, stt_manager):
         except Exception as e:
             logger.error(f"Error in voice activation loop: {e}", exc_info=True)
             print(f"\n[!] Error: {e}")
+            if tts_manager:
+                tts_manager.speak("An unexpected error occurred in my voice system.")
             time.sleep(1)
 
 
