@@ -344,7 +344,7 @@ def run_voice_activation_loop(tts_manager, stt_manager):
                 sys.stdout.flush()
                 
                 wake_input = stt_manager.listen_and_transcribe(timeout=3.0, phrase_time_limit=3.0).strip().lower()
-                if "aurora" in wake_input:
+                if "aurora" in wake_input or "arora" in wake_input:
                     print(f"\n[Waking Up] Detected wake word in: '{wake_input}'")
                     is_active = True
                     state_manager.update_state(status="Online")
@@ -366,7 +366,7 @@ def run_voice_activation_loop(tts_manager, stt_manager):
                 
                 # Check for sleep trigger
                 cleaned_input = user_input.lower()
-                if "bye aurora" in cleaned_input or cleaned_input in ["bye", "goodbye"]:
+                if "bye aurora" in cleaned_input or "bye arora" in cleaned_input or cleaned_input in ["bye", "goodbye"]:
                     print("Aurora > Goodbye. Going back to sleep.")
                     if tts_manager:
                         tts_manager.speak("Goodbye. Going back to sleep.")
