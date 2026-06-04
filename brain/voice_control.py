@@ -8,37 +8,32 @@ class TextToSpeechManager:
         self.rate = rate
         self.voice_index = voice_index
         self.volume = volume
-        self._engine = None
         self._lock = threading.Lock()
-        
-    def _init_engine(self):
-        if self._engine is None:
-            try:
-                self._engine = pyttsx3.init()
-                self._engine.setProperty('rate', self.rate)
-                self._engine.setProperty('volume', self.volume)
-                
-                voices = self._engine.getProperty('voices')
-                if 0 <= self.voice_index < len(voices):
-                    self._engine.setProperty('voice', voices[self.voice_index].id)
-                logger.info("pyttsx3 TextToSpeech initialized successfully.")
-            except Exception as e:
-                logger.error(f"Failed to initialize pyttsx3 TextToSpeech: {e}")
                 
     def speak(self, text: str):
         """Speaks the specified text verbally (blocking)."""
+        import gc
         with self._lock:
-            self._init_engine()
-            if self._engine:
-                try:
-                    logger.debug(f"Speaking: '{text}'")
-                    # Clean text to remove system markers or JSON code blocks if they exist
-                    clean_text = self._clean_speech_text(text)
-                    if clean_text:
-                        self._engine.say(clean_text)
-                        self._engine.runAndWait()
-                except Exception as e:
-                    logger.error(f"Error in pyttsx3 speak: {e}")
+            try:
+                logger.debug(f"Speaking: '{text}'")
+                # Clean text to remove system markers or JSON code blocks if they exist
+                clean_text = self._clean_speech_text(text)
+                if clean_text:
+                    engine = pyttsx3.init()
+                    engine.setProperty('rate', self.rate)
+                    engine.setProperty('volume', self.volume)
+                    
+                    voices = engine.getProperty('voices')
+                    if 0 <= self.voice_index < len(voices):
+                        engine.setProperty('voice', voices[self.voice_index].id)
+                    
+                    engine.say(clean_text)
+                    engine.runAndWait()
+                    engine.stop()
+                    del engine
+                    gc.collect()
+            except Exception as e:
+                logger.error(f"Error in pyttsx3 speak: {e}")
 
     def _clean_speech_text(self, text: str) -> str:
         """Strips out markdown syntax, urls, and JSON blocks for clean text-to-speech output."""
