@@ -239,7 +239,7 @@ class OpenAppTool(BaseTool):
             return {"success": False, "output": msg}
 
 def get_pids_by_window_title(search_title: str) -> list:
-    """Finds PIDs of processes whose visible window titles contain search_title (case-insensitive)."""
+    """Finds PIDs of processes whose window titles contain search_title (case-insensitive)."""
     EnumWindows = ctypes.windll.user32.EnumWindows
     EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
     GetWindowText = ctypes.windll.user32.GetWindowTextW
@@ -250,7 +250,8 @@ def get_pids_by_window_title(search_title: str) -> list:
     pids = []
     search_lower = search_title.lower().strip()
     
-    def foreach_window(hwnd, lParam):
+    # Pass 1: Scan visible windows first
+    def foreach_window_visible(hwnd, lParam):
         if IsWindowVisible(hwnd):
             length = GetWindowTextLength(hwnd)
             if length > 0:
@@ -264,7 +265,25 @@ def get_pids_by_window_title(search_title: str) -> list:
                         pids.append(pid.value)
         return True
         
-    EnumWindows(EnumWindowsProc(foreach_window), 0)
+    EnumWindows(EnumWindowsProc(foreach_window_visible), 0)
+    
+    # Pass 2: Fallback to all windows (including minimized-to-tray/invisible windows) if no PIDs found
+    if not pids:
+        def foreach_window_all(hwnd, lParam):
+            length = GetWindowTextLength(hwnd)
+            if length > 0:
+                buffer = ctypes.create_unicode_buffer(length + 1)
+                GetWindowText(hwnd, buffer, length + 1)
+                title = buffer.value.lower()
+                if search_lower in title:
+                    pid = ctypes.c_ulong()
+                    GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+                    if pid.value not in pids:
+                        pids.append(pid.value)
+            return True
+            
+        EnumWindows(EnumWindowsProc(foreach_window_all), 0)
+        
     return pids
 
 def close_process_by_name(name: str) -> dict:
