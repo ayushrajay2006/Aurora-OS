@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import threading
 from config.config import config
 from config.logging import logger
 from config.state import state_manager
@@ -414,6 +415,7 @@ def run_voice_activation_loop(tts_manager, stt_manager):
         chat_history.append({"role": r["role"], "content": r["content"]})
         
     state_manager.update_state(status="Sleeping")
+    event_bus.publish("wake_status", active=False)
     
     if stt_manager:
         stt_manager.adjust_for_noise()
@@ -438,6 +440,7 @@ def run_voice_activation_loop(tts_manager, stt_manager):
                     print(f"\n[Waking Up] Detected wake word in: '{wake_input}'")
                     is_active = True
                     state_manager.update_state(status="Online")
+                    event_bus.publish("wake_status", active=True)
                     user_title = memory.get_fact("preferred_title") or memory.get_fact("user_name") or "Boss"
                     greeting = f"Hey {user_title}, good to see you again. How can I help?"
                     if tts_manager:
@@ -464,6 +467,7 @@ def run_voice_activation_loop(tts_manager, stt_manager):
                         tts_manager.speak("Goodbye. Going back to sleep.")
                     is_active = False
                     state_manager.update_state(status="Sleeping")
+                    event_bus.publish("wake_status", active=False)
                     continue
                 
                 # Execute assistant turn
@@ -493,17 +497,44 @@ def main():
     parser.add_argument("--voice-out", action="store_true", help="Enable voice output (speech)")
     parser.add_argument("--voice", action="store_true", help="Enable both voice input and output")
     parser.add_argument("--wake", action="store_true", help="Launch in voice activation sleep/wake mode")
+    parser.add_argument("--gui", action="store_true", help="Launch in visual desktop GUI mode with an animated orb")
     args, unknown = parser.parse_known_args()
     
     # Determine voice states by overriding config values with command line flags
-    voice_in = config.voice_input_enabled or args.voice or args.voice_in or args.wake
-    voice_out = config.voice_output_enabled or args.voice or args.voice_out or args.wake
-    wake_mode = config.voice_wake_enabled or args.wake
+    voice_in = config.voice_input_enabled or args.voice or args.voice_in or args.wake or args.gui
+    voice_out = config.voice_output_enabled or args.voice or args.voice_out or args.wake or args.gui
+    wake_mode = config.voice_wake_enabled or args.wake or args.gui
     
     if not verify_ollama_setup():
         sys.exit(1)
         
-    if wake_mode:
+    if args.gui:
+        from brain.voice_control import TextToSpeechManager, SpeechToTextManager
+        tts_manager = TextToSpeechManager(
+            rate=config.voice_rate,
+            voice_index=config.voice_index,
+            volume=config.voice_volume,
+            voice_name=config.voice_name
+        )
+        stt_manager = SpeechToTextManager()
+        
+        # Load conversation history context
+        history_records = memory.load_history(limit=30)
+        chat_history = []
+        for r in history_records:
+            chat_history.append({"role": r["role"], "content": r["content"]})
+            
+        # Launch voice wake activation loop in a background daemon thread
+        threading.Thread(
+            target=run_voice_activation_loop,
+            args=(tts_manager, stt_manager),
+            daemon=True
+        ).start()
+        
+        # Launch QML desktop GUI app on the main thread (blocking)
+        from ui.gui_app import run_gui_app
+        run_gui_app(chat_history, tts_manager)
+    elif wake_mode:
         from brain.voice_control import TextToSpeechManager, SpeechToTextManager
         tts_manager = TextToSpeechManager(
             rate=config.voice_rate,
