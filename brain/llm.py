@@ -80,15 +80,67 @@ class OllamaClient:
         except Exception:
             return []
 
+    def _prepare_ollama_payload(self, messages: List[Dict[str, str]]) -> tuple:
+        import base64
+        import re
+        import os
+        
+        # Match standard absolute Windows or Unix paths pointing to PNG, JPG, or JPEG images
+        image_path_pattern = re.compile(r"([a-zA-Z]:\\[^\s\"]+\.(?:png|jpg|jpeg))|(/[^\s\"]+\.(?:png|jpg|jpeg))", re.IGNORECASE)
+        
+        formatted_messages = []
+        has_images = False
+        
+        for msg in messages:
+            role = msg.get("role")
+            content = msg.get("content")
+            
+            formatted_msg = {
+                "role": role,
+                "content": content
+            }
+            
+            # Check for image paths in the message content text
+            matches = image_path_pattern.findall(content)
+            images = []
+            for match in matches:
+                path = next((m for m in match if m), "").strip()
+                if path and os.path.exists(path):
+                    try:
+                        logger.info(f"OllamaClient: Attaching image file '{path}' to Ollama payload")
+                        with open(path, "rb") as img_file:
+                            encoded_image = base64.b64encode(img_file.read()).decode("utf-8")
+                        images.append(encoded_image)
+                        has_images = True
+                    except Exception as e:
+                        logger.error(f"OllamaClient: Failed to read or encode image file '{path}': {e}")
+            
+            if images:
+                formatted_msg["images"] = images
+                
+            formatted_messages.append(formatted_msg)
+            
+        return formatted_messages, has_images
+
     def chat(self, messages: List[Dict[str, str]], stream: bool = False) -> Any:
         """
         Sends a conversation chat request to Ollama.
         Supports standard generation and streaming generation.
         """
+        formatted_messages, has_images = self._prepare_ollama_payload(messages)
+        
+        # Dynamic model selection based on visual content presence
+        request_model = self.model
+        if has_images:
+            local_vision = config.local_vision_model.strip()
+            if local_vision:
+                request_model = local_vision
+                logger.info(f"OllamaClient: Images detected in payload. Dynamically routing to local vision model: '{request_model}'")
+
         url = f"{self.host}/api/chat"
         payload = {
-            "model": self.model,
-            "messages": messages,
+            "model": request_model,
+            "messages": formatted_messages,
             "stream": stream,
             "options": {
                 "temperature": 0.3
@@ -146,24 +198,39 @@ class LlmClient:
         return self.ollama.get_installed_models()
 
     def chat(self, messages: List[Dict[str, str]], stream: bool = False) -> Any:
-        if config.llm_provider == "gemini":
-            api_key = config.gemini_api_key.strip()
-            if not api_key:
-                logger.warning("Gemini API key is missing in config.json. Falling back to local Ollama.")
-                return self.ollama.chat(messages, stream=stream)
-            
+        provider = config.llm_provider
+        gemini_key = config.gemini_api_key.strip()
+        
+        if provider == "gemini" and gemini_key:
             try:
                 if stream:
                     # Synchronously establish connection and verify status to catch errors (e.g. 429) early
-                    res = self._get_gemini_stream_response(api_key, messages)
+                    res = self._get_gemini_stream_response(gemini_key, messages)
                     return self._parse_gemini_stream(res)
                 else:
-                    return self._chat_gemini_sync(api_key, messages)
+                    return self._chat_gemini_sync(gemini_key, messages)
             except Exception as e:
                 logger.error(f"Gemini API request failed: {e}. Falling back to local Ollama.")
                 return self.ollama.chat(messages, stream=stream)
         else:
-            return self.ollama.chat(messages, stream=stream)
+            # Primary local Ollama
+            try:
+                return self.ollama.chat(messages, stream=stream)
+            except Exception as e:
+                if gemini_key:
+                    logger.error(f"Local Ollama request failed: {e}. Falling back to Gemini API.")
+                    try:
+                        if stream:
+                            res = self._get_gemini_stream_response(gemini_key, messages)
+                            return self._parse_gemini_stream(res)
+                        else:
+                            return self._chat_gemini_sync(gemini_key, messages)
+                    except Exception as ge:
+                        logger.error(f"Gemini API fallback request also failed: {ge}")
+                        raise
+                else:
+                    logger.error(f"Local Ollama request failed: {e}. No Gemini API key configured for fallback.")
+                    raise
 
     def _chat_gemini_sync(self, api_key: str, messages: List[Dict[str, str]]) -> str:
         system_instruction, contents = self._prepare_gemini_payload(messages)

@@ -45,77 +45,83 @@ class TextToSpeechManager:
         if not clean_text:
             return
             
-        if self.use_neural and self._kokoro and self._pyaudio_instance:
-            with self._lock:
-                try:
-                    logger.debug(f"Speaking (Neural): '{clean_text}'")
-                    sentences = self._split_into_sentences(clean_text)
-                    if not sentences:
-                        return
-                    
-                    audio_queue = queue.Queue(maxsize=2)
-                    
-                    # Determine voice name dynamically
-                    voice = self.voice_name
-                    if self.voice_index == 0:
-                        voice = "am_adam"
-                    elif self.voice_index == 2:
-                        voice = "af_sarah"
-                    elif self.voice_index == 3:
-                        voice = "af_sky"
-                    
-                    speed = max(0.5, min(2.0, self.rate / 180.0))
-                    
-                    def synthesizer_worker():
-                        try:
-                            for s in sentences:
-                                s_text = s.strip()
-                                if not s_text:
-                                    continue
-                                logger.debug(f"Neural TTS Synthesizing: '{s_text}' using voice '{voice}'")
-                                samples, sample_rate = self._kokoro.create(
-                                    s_text,
-                                    voice=voice,
-                                    speed=speed,
-                                    lang="en-us"
-                                )
-                                audio_queue.put((samples, sample_rate))
-                        except Exception as e:
-                            logger.error(f"Error in neural synthesizer worker: {e}")
-                        finally:
-                            audio_queue.put(None)
+        from config.event_bus import event_bus
+        event_bus.publish("speech_started", text=clean_text)
+        
+        try:
+            if self.use_neural and self._kokoro and self._pyaudio_instance:
+                with self._lock:
+                    try:
+                        logger.debug(f"Speaking (Neural): '{clean_text}'")
+                        sentences = self._split_into_sentences(clean_text)
+                        if not sentences:
+                            return
+                        
+                        audio_queue = queue.Queue(maxsize=2)
+                        
+                        # Determine voice name dynamically
+                        voice = self.voice_name
+                        if self.voice_index == 0:
+                            voice = "am_adam"
+                        elif self.voice_index == 2:
+                            voice = "af_sarah"
+                        elif self.voice_index == 3:
+                            voice = "af_sky"
+                        
+                        speed = max(0.5, min(2.0, self.rate / 180.0))
+                        
+                        def synthesizer_worker():
+                            try:
+                                for s in sentences:
+                                    s_text = s.strip()
+                                    if not s_text:
+                                        continue
+                                    logger.debug(f"Neural TTS Synthesizing: '{s_text}' using voice '{voice}'")
+                                    samples, sample_rate = self._kokoro.create(
+                                        s_text,
+                                        voice=voice,
+                                        speed=speed,
+                                        lang="en-us"
+                                    )
+                                    audio_queue.put((samples, sample_rate))
+                            except Exception as e:
+                                logger.error(f"Error in neural synthesizer worker: {e}")
+                            finally:
+                                audio_queue.put(None)
+                                
+                        # Start synthesizer thread
+                        t = threading.Thread(target=synthesizer_worker, daemon=True)
+                        t.start()
+                        
+                        # Player loop (blocking)
+                        import pyaudio
+                        stream = None
+                        while True:
+                            item = audio_queue.get()
+                            if item is None:
+                                break
                             
-                    # Start synthesizer thread
-                    t = threading.Thread(target=synthesizer_worker, daemon=True)
-                    t.start()
-                    
-                    # Player loop (blocking)
-                    import pyaudio
-                    stream = None
-                    while True:
-                        item = audio_queue.get()
-                        if item is None:
-                            break
-                        
-                        samples, sample_rate = item
-                        if stream is None:
-                            stream = self._pyaudio_instance.open(
-                                format=pyaudio.paFloat32,
-                                channels=1,
-                                rate=sample_rate,
-                                output=True
-                            )
-                        stream.write(samples.tobytes())
-                        
-                    if stream is not None:
-                        stream.stop_stream()
-                        stream.close()
-                        
-                except Exception as e:
-                    logger.error(f"Error in neural TTS playback: {e}. Falling back to SAPI5.")
-                    self._speak_sapi5(clean_text)
-        else:
-            self._speak_sapi5(clean_text)
+                            samples, sample_rate = item
+                            if stream is None:
+                                stream = self._pyaudio_instance.open(
+                                    format=pyaudio.paFloat32,
+                                    channels=1,
+                                    rate=sample_rate,
+                                    output=True
+                                )
+                            stream.write(samples.tobytes())
+                            
+                        if stream is not None:
+                            stream.stop_stream()
+                            stream.close()
+                            
+                    except Exception as e:
+                        logger.error(f"Error in neural TTS playback: {e}. Falling back to SAPI5.")
+                        self._speak_sapi5(clean_text)
+            else:
+                self._speak_sapi5(clean_text)
+        finally:
+            event_bus.publish("speech_completed", text=clean_text)
 
     def _speak_sapi5(self, clean_text: str):
         """Standard fallback SAPI5 TTS generation."""

@@ -4,6 +4,7 @@ import time
 from config.config import config
 from config.logging import logger
 from config.state import state_manager
+from config.event_bus import event_bus
 from brain.llm import llm_client
 from brain.planner import planner, SYSTEM_PROMPT_TEMPLATE
 from memory.memory import memory
@@ -112,6 +113,7 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
         json_started = False
         
         try:
+            event_bus.publish("thinking_started", step=step)
             stream = llm_client.chat(messages, stream=True)
             for chunk in stream:
                 full_text += chunk
@@ -145,11 +147,13 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
             
             # Print newline to end the Aurora response line neatly
             print()
+            event_bus.publish("thinking_finished", step=step)
             
         except Exception as e:
             print() # clear line
             logger.error(f"Ollama streaming chat failed: {e}", exc_info=True)
             print(f"Aurora > Error communicating with LLM service: {e}")
+            event_bus.publish("error_occurred", error=str(e), source="llm")
             if voice_output and tts_manager:
                 tts_manager.speak("Sorry, I encountered an error communicating with my brain service.")
             break
@@ -300,9 +304,11 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
             # Execute tool
             print(f"     [*] Executing '{tool_name}'...")
             state_manager.update_state(status="Executing")
+            event_bus.publish("tool_started", tool=tool_name, args=args)
             res = registry.execute_tool(tool_name, args)
             success = res.get("success", False)
             output = res.get("output", "")
+            event_bus.publish("tool_completed", tool=tool_name, success=success, output=output)
             
             print(f"     [Result] Success={success} | Output='{output}'")
             memory.update_action(action_id, "success" if success else "failed", res)

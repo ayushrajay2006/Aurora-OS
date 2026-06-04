@@ -1,6 +1,7 @@
 from tools.registry import registry, BaseTool
 from memory.memory import memory
 from config.logging import logger
+from config.event_bus import event_bus
 
 @registry.register(
     name="remember_fact",
@@ -24,6 +25,7 @@ class RememberFactTool(BaseTool):
         logger.info(f"Executing remember_fact: '{key_clean}' = '{value_clean}'")
         try:
             memory.set_fact(key_clean, value_clean)
+            event_bus.publish("memory_written", key=key_clean, value=value_clean)
             return {
                 "success": True,
                 "output": f"Successfully remembered: '{key_clean}' = '{value_clean}'."
@@ -56,6 +58,7 @@ class ForgetFactTool(BaseTool):
                     "output": f"Fact key '{key_clean}' was not found in memory (nothing to delete)."
                 }
             memory.delete_fact(key_clean)
+            event_bus.publish("memory_deleted", key=key_clean)
             return {
                 "success": True,
                 "output": f"Successfully forgot fact key: '{key_clean}'."

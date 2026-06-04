@@ -21,6 +21,7 @@ DEFAULT_CONFIG = {
     "voice_volume": 1.0,
     "voice_name": "af_bella",
     "llm_provider": "local",
+    "local_vision_model": "llava",
     "gemini_api_key": "",
     "gemini_model": "gemini-2.5-flash"
 }
@@ -119,6 +120,10 @@ class Config:
     @property
     def gemini_model(self) -> str:
         return self.get("gemini_model", "gemini-2.5-flash")
+
+    @property
+    def local_vision_model(self) -> str:
+        return self.get("local_vision_model", "llava")
 
 
 # Global config instance
