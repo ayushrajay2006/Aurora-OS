@@ -18,7 +18,11 @@ DEFAULT_CONFIG = {
     "voice_wake_enabled": False,
     "voice_rate": 180,
     "voice_index": 1,
-    "voice_volume": 1.0
+    "voice_volume": 1.0,
+    "voice_name": "af_bella",
+    "llm_provider": "local",
+    "gemini_api_key": "",
+    "gemini_model": "gemini-2.5-flash"
 }
 
 class Config:
@@ -97,8 +101,24 @@ class Config:
         return self.get("voice_volume")
 
     @property
+    def voice_name(self) -> str:
+        return self.get("voice_name", "af_bella")
+
+    @property
     def voice_wake_enabled(self) -> bool:
         return self.get("voice_wake_enabled")
+
+    @property
+    def llm_provider(self) -> str:
+        return self.get("llm_provider", "local")
+
+    @property
+    def gemini_api_key(self) -> str:
+        return self.get("gemini_api_key", "")
+
+    @property
+    def gemini_model(self) -> str:
+        return self.get("gemini_model", "gemini-2.5-flash")
 
 
 # Global config instance

@@ -45,13 +45,30 @@ class OpenWebsiteTool(BaseTool):
         target_url = url.strip()
         app_name_clean = target_url.lower()
         
-        # 1. Resolve Friendly Shortcut Aliases
+        # 1. Resolve Friendly Shortcut Aliases & Domain Redirects
         import re
-        alias_key = re.sub(r"\.(com|in|org|co|net|edu|gov)$", "", app_name_clean)
+        alias_key = app_name_clean
+        if "://" in app_name_clean or app_name_clean.startswith("www."):
+            try:
+                parse_target = app_name_clean if "://" in app_name_clean else "http://" + app_name_clean
+                parsed = urllib.parse.urlparse(parse_target)
+                hostname = parsed.hostname
+                if hostname:
+                    if hostname.startswith("www."):
+                        hostname = hostname[4:]
+                    alias_key = hostname
+            except Exception:
+                pass
+        else:
+            if "/" in alias_key:
+                alias_key = alias_key.split("/")[0]
+                
+        alias_key = re.sub(r"\.(com|in|org|co|net|edu|gov|co\.in|ac\.in|org\.in)$", "", alias_key)
         alias_key = alias_key.replace(" ", "").replace("-", "")
+        
         if alias_key in WEBSITE_ALIASES:
             target_url = WEBSITE_ALIASES[alias_key]
-            logger.debug(f"Resolved friendly website shortcut: '{alias_key}' -> {target_url}")
+            logger.info(f"Resolved friendly website shortcut/domain mapping: '{url}' -> key '{alias_key}' -> '{target_url}'")
             
         # 2. Check for absolute local paths or file URIs
         import os

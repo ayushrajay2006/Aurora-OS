@@ -31,3 +31,6 @@ Desktop.ini
 
 # Local Database
 memory.db
+
+# Local Configuration
+config.json

@@ -206,26 +206,45 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
                 print(f"     [!] CONFIRMATION REQUIRED: Aurora wants to run '{tool_name}' with args {args}.")
                 if stt_manager and tts_manager:
                     user_confirm = "no"
+                    
+                    # Fetch preferred title from memory db (e.g. Boss)
+                    user_title = memory.get_fact("preferred_title") or memory.get_fact("user_name") or "Boss"
+                    
+                    # Friendly mapping for actions
+                    friendly_actions = {
+                        "open_website": "open this website",
+                        "open_app": "launch this application",
+                        "search_files": "search your files",
+                        "read_file": "read this file",
+                        "delete_file": "delete this file",
+                        "remember_fact": "save this preference"
+                    }
+                    action_phrase = friendly_actions.get(tool_name, f"execute {tool_name}")
+                    
                     for attempt in range(2):
                         if attempt == 0:
-                            tts_manager.speak(f"I need your confirmation to run {tool_name}. Should I proceed?")
+                            tts_manager.speak(f"Ready to {action_phrase}, {user_title}. Should I go ahead?")
                         else:
-                            tts_manager.speak("Sorry, I didn't catch that. Please say yes or no to confirm.")
+                            tts_manager.speak(f"Sorry {user_title}, I didn't catch that. Please say yes or no.")
                         
                         print(f"         [Voice Confirmation - Attempt {attempt+1}] Speak 'yes' or 'no': ", end="", flush=True)
                         voice_confirm = stt_manager.listen_and_transcribe(timeout=5.0, phrase_time_limit=4.0).strip().lower()
                         print(f"Received: '{voice_confirm}'")
                         
-                        if any(w in voice_confirm for w in ["yes", "yeah", "sure", "proceed", "ok", "okay", "y"]):
+                        words = voice_confirm.split()
+                        is_yes = any(w in words for w in ["yes", "yeah", "sure", "proceed", "ok", "okay", "y"]) or "yes" in voice_confirm or "yeah" in voice_confirm
+                        is_no = any(w in words for w in ["no", "nope", "cancel", "stop", "n"]) or "no" in voice_confirm
+                        
+                        if is_yes:
                             tts_manager.speak("Proceeding.")
                             user_confirm = "yes"
                             break
-                        elif any(w in voice_confirm for w in ["no", "nope", "cancel", "stop", "n"]):
+                        elif is_no:
                             tts_manager.speak("Cancelled.")
                             user_confirm = "no"
                             break
                     else:
-                        tts_manager.speak("No confirmation received. Cancelling action.")
+                        tts_manager.speak(f"No response received. Cancelling action, {user_title}.")
                         user_confirm = "no"
                 else:
                     user_confirm = input("         Do you want to execute this action? (y/N): ").strip().lower()
@@ -240,26 +259,30 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
                 expected_input = "DELETE" if "delete" in tool_name.lower() else "EXECUTE"
                 if stt_manager and tts_manager:
                     user_confirm = "CANCEL"
+                    
+                    user_title = memory.get_fact("preferred_title") or memory.get_fact("user_name") or "Boss"
+                    
                     for attempt in range(2):
                         if attempt == 0:
-                            tts_manager.speak(f"This is a high risk action to delete files. Please say {expected_input} to confirm, or cancel to abort.")
+                            tts_manager.speak(f"This is a high-risk deletion, {user_title}. Please say {expected_input} to confirm, or cancel to abort.")
                         else:
-                            tts_manager.speak(f"Sorry, I didn't hear you. Please say {expected_input} or cancel.")
+                            tts_manager.speak(f"I didn't hear you, {user_title}. Please say {expected_input} or cancel.")
                             
                         print(f"         [Voice Confirmation - Attempt {attempt+1}] Speak '{expected_input}': ", end="", flush=True)
                         voice_confirm = stt_manager.listen_and_transcribe(timeout=5.0, phrase_time_limit=4.0).strip().upper()
                         print(f"Received: '{voice_confirm}'")
                         
+                        words = voice_confirm.split()
                         if expected_input in voice_confirm:
                             tts_manager.speak("Executing high risk action.")
                             user_confirm = expected_input
                             break
-                        elif any(w in voice_confirm for w in ["CANCEL", "ABORT", "NO"]):
+                        elif any(w in words for w in ["CANCEL", "ABORT", "NO"]) or any(w in voice_confirm for w in ["CANCEL", "ABORT"]):
                             tts_manager.speak("Aborted.")
                             user_confirm = "CANCEL"
                             break
                     else:
-                        tts_manager.speak("No confirmation received. Aborting action.")
+                        tts_manager.speak(f"No response received. Aborting action, {user_title}.")
                         user_confirm = "CANCEL"
                 else:
                     user_confirm = input(f"         Please type '{expected_input}' to continue: ").strip()
@@ -315,7 +338,8 @@ def run_chat_loop(voice_input: bool = False, voice_output: bool = False):
         tts_manager = TextToSpeechManager(
             rate=config.voice_rate,
             voice_index=config.voice_index,
-            volume=config.voice_volume
+            volume=config.voice_volume,
+            voice_name=config.voice_name
         )
     if voice_input:
         from brain.voice_control import SpeechToTextManager
@@ -400,10 +424,12 @@ def run_voice_activation_loop(tts_manager, stt_manager):
                     print(f"\n[Waking Up] Detected wake word in: '{wake_input}'")
                     is_active = True
                     state_manager.update_state(status="Online")
+                    user_title = memory.get_fact("preferred_title") or memory.get_fact("user_name") or "Boss"
+                    greeting = f"Hey {user_title}, good to see you again. How can I help?"
                     if tts_manager:
-                        tts_manager.speak("Yes, I am listening.")
+                        tts_manager.speak(greeting)
                     else:
-                        print("Aurora > Yes, I am listening.")
+                        print(f"Aurora > {greeting}")
                 continue
             else:
                 # Active Mode: Conversational Loop
@@ -468,7 +494,8 @@ def main():
         tts_manager = TextToSpeechManager(
             rate=config.voice_rate,
             voice_index=config.voice_index,
-            volume=config.voice_volume
+            volume=config.voice_volume,
+            voice_name=config.voice_name
         )
         stt_manager = SpeechToTextManager()
         run_voice_activation_loop(tts_manager, stt_manager)
