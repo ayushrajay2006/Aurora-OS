@@ -142,7 +142,19 @@ def search_common_paths(app_name: str) -> Optional[str]:
         "visual studio code": "code.exe",
         "visualstudiocode": "code.exe",
         "brave": "brave.exe",
-        "firefox": "firefox.exe"
+        "firefox": "firefox.exe",
+        "appdata": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData"),
+        "appdata folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData"),
+        "localappdata": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData", "Local"),
+        "localappdata folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData", "Local"),
+        "roaming": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData", "Roaming"),
+        "roaming folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData", "Roaming"),
+        "temp": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData", "Local", "Temp"),
+        "temp folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData", "Local", "Temp"),
+        "desktop": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Desktop"),
+        "desktop folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "Desktop"),
+        "recent": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData", "Roaming", "Microsoft", "Windows", "Recent"),
+        "recent folder": os.path.join(os.environ.get("USERPROFILE", "C:\\Users\\default"), "AppData", "Roaming", "Microsoft", "Windows", "Recent")
     }
     
     if app_name_clean in system_utilities:
@@ -199,10 +211,18 @@ class OpenAppTool(BaseTool):
     def execute(self, app_name: str) -> dict:
         logger.info(f"Attempting to resolve path for application: '{app_name}'")
         
+        # 0. Try direct filesystem path matching (e.g. absolute paths or valid relative paths)
+        resolved_path = None
+        clean_name = app_name.strip()
+        if os.path.exists(clean_name):
+            resolved_path = clean_name
+            logger.debug(f"Resolved app path via direct filesystem existence: {resolved_path}")
+            
         # 1. Try Registry App Paths
-        resolved_path = search_registry_app_paths(app_name)
-        if resolved_path:
-            logger.debug(f"Resolved app path via registry: {resolved_path}")
+        if not resolved_path:
+            resolved_path = search_registry_app_paths(app_name)
+            if resolved_path:
+                logger.debug(f"Resolved app path via registry: {resolved_path}")
         
         # 2. Try Start Menu Shortcuts
         if not resolved_path:
