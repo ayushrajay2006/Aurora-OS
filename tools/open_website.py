@@ -15,7 +15,11 @@ WEBSITE_ALIASES = {
     "realpage": "https://www.realpage.com",
     "reddit": "https://www.reddit.com",
     "wikipedia": "https://www.wikipedia.org",
-    "instagram": "https://www.instagram.com"
+    "instagram": "https://www.instagram.com",
+    "goindigo": "https://www.goindigo.in",
+    "indigo": "https://www.goindigo.in",
+    "irctc": "https://www.irctc.co.in",
+    "flipkart": "https://www.flipkart.com"
 }
 
 @registry.register(
@@ -42,9 +46,10 @@ class OpenWebsiteTool(BaseTool):
         app_name_clean = target_url.lower()
         
         # 1. Resolve Friendly Shortcut Aliases
-        if app_name_clean in WEBSITE_ALIASES:
-            target_url = WEBSITE_ALIASES[app_name_clean]
-            logger.debug(f"Resolved friendly website shortcut: '{app_name_clean}' -> {target_url}")
+        alias_key = app_name_clean.replace(" ", "").replace("-", "").replace(".", "").replace("com", "").replace("in", "").replace("org", "").replace("co", "")
+        if alias_key in WEBSITE_ALIASES:
+            target_url = WEBSITE_ALIASES[alias_key]
+            logger.debug(f"Resolved friendly website shortcut: '{alias_key}' -> {target_url}")
             
         # 2. Check for absolute local paths or file URIs
         import os
