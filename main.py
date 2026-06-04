@@ -64,11 +64,33 @@ def verify_ollama_setup() -> bool:
     state_manager.update_state(status="Online", model_name=model_name)
     return True
 
-def run_chat_loop():
+def run_chat_loop(voice_input: bool = False, voice_output: bool = False):
     print("\n[+] Aurora is fully operational!")
+    if voice_input:
+        print("[+] Voice Input (Microphone) is active.")
+    if voice_output:
+        print("[+] Voice Output (Text-to-Speech) is active.")
+        
+    tts_manager = None
+    stt_manager = None
+    if voice_output:
+        from brain.voice_control import TextToSpeechManager
+        tts_manager = TextToSpeechManager(
+            rate=config.voice_rate,
+            voice_index=config.voice_index,
+            volume=config.voice_volume
+        )
+    if voice_input:
+        from brain.voice_control import SpeechToTextManager
+        stt_manager = SpeechToTextManager()
+        stt_manager.adjust_for_noise()
+        
     print("Type your message to chat, or type 'exit' or 'quit' to close.")
     print("-" * 60)
     
+    if voice_output and tts_manager:
+        tts_manager.speak("Aurora is ready.")
+        
     # Load past database history for context
     history_records = memory.load_history(limit=30)
     chat_history = []
@@ -77,11 +99,21 @@ def run_chat_loop():
         
     while True:
         try:
-            user_input = input("\nUser > ").strip()
-            if not user_input:
-                continue
+            if voice_input and stt_manager:
+                user_input = stt_manager.listen_and_transcribe()
+                if user_input:
+                    print(f"\nUser (Voice) > {user_input}")
+                else:
+                    continue
+            else:
+                user_input = input("\nUser > ").strip()
+                if not user_input:
+                    continue
+                    
             if user_input.lower() in ["exit", "quit"]:
                 print("Closing Aurora. Goodbye!")
+                if voice_output and tts_manager:
+                    tts_manager.speak("Goodbye.")
                 break
                 
             # Log and save message
@@ -260,8 +292,14 @@ def run_chat_loop():
                 
             state_manager.update_state(status="Online")
             
+            # Speak final response if voice output is active
+            if voice_output and tts_manager and final_reply:
+                tts_manager.speak(final_reply)
+                
         except (KeyboardInterrupt, EOFError, StopIteration):
             print("\nClosing Aurora. Goodbye!")
+            if voice_output and tts_manager:
+                tts_manager.speak("Goodbye.")
             break
         except Exception as e:
             logger.error(f"Error in chat loop: {e}", exc_info=True)
@@ -271,10 +309,22 @@ def main():
     print_banner()
     logger.info("Starting Aurora...")
     
+    # Simple CLI argument parsing
+    import argparse
+    parser = argparse.ArgumentParser(description="Aurora OS Assistant")
+    parser.add_argument("--voice-in", action="store_true", help="Enable voice input (microphone)")
+    parser.add_argument("--voice-out", action="store_true", help="Enable voice output (speech)")
+    parser.add_argument("--voice", action="store_true", help="Enable both voice input and output")
+    args, unknown = parser.parse_known_args()
+    
+    # Determine voice states by overriding config values with command line flags
+    voice_in = config.voice_input_enabled or args.voice or args.voice_in
+    voice_out = config.voice_output_enabled or args.voice or args.voice_out
+    
     if not verify_ollama_setup():
         sys.exit(1)
         
-    run_chat_loop()
+    run_chat_loop(voice_in, voice_out)
 
 if __name__ == "__main__":
     main()

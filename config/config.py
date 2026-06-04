@@ -12,7 +12,12 @@ DEFAULT_CONFIG = {
         "low": "execute",
         "medium": "approve",
         "high": "verify"
-    }
+    },
+    "voice_input_enabled": False,
+    "voice_output_enabled": False,
+    "voice_rate": 180,
+    "voice_index": 1,
+    "voice_volume": 1.0
 }
 
 class Config:
@@ -69,6 +74,26 @@ class Config:
     @property
     def safety_thresholds(self) -> dict:
         return self.get("safety_thresholds")
+
+    @property
+    def voice_input_enabled(self) -> bool:
+        return self.get("voice_input_enabled")
+
+    @property
+    def voice_output_enabled(self) -> bool:
+        return self.get("voice_output_enabled")
+
+    @property
+    def voice_rate(self) -> int:
+        return self.get("voice_rate")
+
+    @property
+    def voice_index(self) -> int:
+        return self.get("voice_index")
+
+    @property
+    def voice_volume(self) -> float:
+        return self.get("voice_volume")
 
 # Global config instance
 config = Config()

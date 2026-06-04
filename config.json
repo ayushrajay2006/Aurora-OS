@@ -9,5 +9,10 @@
         "low": "execute",
         "medium": "approve",
         "high": "verify"
-    }
+    },
+    "voice_input_enabled": false,
+    "voice_output_enabled": false,
+    "voice_rate": 180,
+    "voice_index": 1,
+    "voice_volume": 1.0
 }
