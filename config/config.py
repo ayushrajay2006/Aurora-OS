@@ -15,6 +15,7 @@ DEFAULT_CONFIG = {
     },
     "voice_input_enabled": False,
     "voice_output_enabled": False,
+    "voice_wake_enabled": False,
     "voice_rate": 180,
     "voice_index": 1,
     "voice_volume": 1.0
@@ -94,6 +95,11 @@ class Config:
     @property
     def voice_volume(self) -> float:
         return self.get("voice_volume")
+
+    @property
+    def voice_wake_enabled(self) -> bool:
+        return self.get("voice_wake_enabled")
+
 
 # Global config instance
 config = Config()
