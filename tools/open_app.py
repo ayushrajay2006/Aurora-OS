@@ -61,7 +61,36 @@ def search_common_paths(app_name: str) -> Optional[str]:
     """Fallbacks for hardcoded popular applications on Windows."""
     app_name_clean = app_name.lower().strip()
     
-    # Common system utilities, directories, and setting protocols
+    # 1. Popular absolute installation paths (checked first to avoid PATH command conflicts)
+    common_installations = {
+        "chrome": [
+            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+            "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+        ],
+        "vscode": [
+            os.path.join(os.environ.get("LocalAppData", ""), "Programs\\Microsoft VS Code\\Code.exe"),
+            "C:\\Program Files\\Microsoft VS Code\\Code.exe"
+        ],
+        "discord": [
+            os.path.join(os.environ.get("LocalAppData", ""), "Discord\\Update.exe") # update.exe runs discord
+        ],
+        "brave": [
+            "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+            "C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+            os.path.join(os.environ.get("LocalAppData", ""), "BraveSoftware\\Brave-Browser\\Application\\brave.exe")
+        ],
+        "firefox": [
+            "C:\\Program Files\\Mozilla Firefox\\firefox.exe",
+            "C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
+        ]
+    }
+    
+    if app_name_clean in common_installations:
+        for path in common_installations[app_name_clean]:
+            if os.path.exists(path):
+                return path
+                
+    # 2. Common system utilities, directories, and setting protocols
     system_utilities = {
         "notepad": "notepad.exe",
         "calculator": "calc.exe",
@@ -111,31 +140,13 @@ def search_common_paths(app_name: str) -> Optional[str]:
         "vs code": "code.exe",
         "vscode": "code.exe",
         "visual studio code": "code.exe",
-        "visualstudiocode": "code.exe"
+        "visualstudiocode": "code.exe",
+        "brave": "brave.exe",
+        "firefox": "firefox.exe"
     }
     
     if app_name_clean in system_utilities:
         return system_utilities[app_name_clean]
-        
-    # Popular manual installation paths
-    common_installations = {
-        "chrome": [
-            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-            "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-        ],
-        "vscode": [
-            os.path.join(os.environ.get("LocalAppData", ""), "Programs\\Microsoft VS Code\\Code.exe"),
-            "C:\\Program Files\\Microsoft VS Code\\Code.exe"
-        ],
-        "discord": [
-            os.path.join(os.environ.get("LocalAppData", ""), "Discord\\Update.exe") # update.exe runs discord
-        ]
-    }
-    
-    if app_name_clean in common_installations:
-        for path in common_installations[app_name_clean]:
-            if os.path.exists(path):
-                return path
                 
     return None
 
@@ -228,6 +239,19 @@ class OpenAppTool(BaseTool):
             if os.path.isabs(resolved_path):
                 os.startfile(resolved_path)
             else:
+                # Validate command existence in PATH to prevent silent command failures
+                import shutil
+                cmd_base = resolved_path.split()[0]
+                resolved_cmd = None
+                for ext in ["", ".exe", ".cmd", ".bat"]:
+                    if shutil.which(cmd_base + ext):
+                        resolved_cmd = cmd_base + ext
+                        break
+                if not resolved_cmd:
+                    msg = f"Failed to open '{app_name}': '{cmd_base}' is not recognized as an internal or external command, operable program or batch file."
+                    logger.error(msg)
+                    return {"success": False, "output": msg}
+                
                 # System utilities in PATH like cmd or calc
                 subprocess.Popen(resolved_path, shell=True)
                 

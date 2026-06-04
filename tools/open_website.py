@@ -1,6 +1,6 @@
 import webbrowser
 import urllib.parse
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from tools.registry import registry, BaseTool
 from config.logging import logger
 
@@ -20,18 +20,23 @@ WEBSITE_ALIASES = {
 
 @registry.register(
     name="open_website",
-    description="Launches a website URL or searches Google in the default browser.",
+    description="Launches a website URL or searches Google. Can optionally target a specific browser if requested.",
     args_schema={
         "url": {
             "type": "string",
             "description": "The website URL, shortcut (e.g., youtube, gmail, leetcode), or a search query."
+        },
+        "browser": {
+            "type": "string",
+            "description": "Optional browser name to launch the website in (e.g., 'chrome', 'edge', 'firefox', 'brave'). If not specified, the system default browser will be used.",
+            "enum": ["chrome", "edge", "firefox", "brave"]
         }
     },
     risk_level="medium"
 )
 class OpenWebsiteTool(BaseTool):
-    def execute(self, url: str) -> dict:
-        logger.info(f"Received request to open website or query: '{url}'")
+    def execute(self, url: str, browser: Optional[str] = None) -> dict:
+        logger.info(f"Received request to open website or query: '{url}' in browser: '{browser}'")
         
         target_url = url.strip()
         app_name_clean = target_url.lower()
@@ -52,6 +57,42 @@ class OpenWebsiteTool(BaseTool):
                 encoded_query = urllib.parse.quote(target_url)
                 target_url = f"https://www.google.com/search?q={encoded_query}"
                 logger.info(f"Treating non-URL query as Google Search: '{url}' -> {target_url}")
+                
+        # 4. Handle Specific Browser Launch
+        if browser:
+            browser_clean = browser.lower().strip()
+            browser_map = {
+                "edge": "edge",
+                "microsoft edge": "edge",
+                "chrome": "chrome",
+                "google chrome": "chrome",
+                "brave": "brave",
+                "firefox": "firefox"
+            }
+            app_key = browser_map.get(browser_clean, browser_clean)
+            
+            from tools.open_app import search_common_paths, search_registry_app_paths, search_start_menu
+            import subprocess
+            import os
+            
+            resolved_path = search_common_paths(app_key)
+            if not resolved_path:
+                resolved_path = search_registry_app_paths(app_key)
+            if not resolved_path:
+                resolved_path = search_start_menu(app_key)
+                
+            if resolved_path:
+                try:
+                    if os.path.isabs(resolved_path):
+                        subprocess.Popen([resolved_path, target_url])
+                    else:
+                        subprocess.Popen(f'start {resolved_path} "{target_url}"', shell=True)
+                    logger.info(f"Successfully opened {target_url} in specific browser '{browser}'")
+                    return {"success": True, "output": f"Successfully opened website in {browser}: {target_url}"}
+                except Exception as e:
+                    logger.warning(f"Failed to launch website in specific browser '{browser}': {e}. Falling back to default browser.")
+            else:
+                logger.warning(f"Could not resolve path for specific browser '{browser}'. Falling back to default browser.")
                 
         try:
             # Open in user's default configured browser (Chrome, Brave, Edge, etc.)
