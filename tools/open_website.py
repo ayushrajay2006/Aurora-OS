@@ -46,7 +46,9 @@ class OpenWebsiteTool(BaseTool):
         app_name_clean = target_url.lower()
         
         # 1. Resolve Friendly Shortcut Aliases
-        alias_key = app_name_clean.replace(" ", "").replace("-", "").replace(".", "").replace("com", "").replace("in", "").replace("org", "").replace("co", "")
+        import re
+        alias_key = re.sub(r"\.(com|in|org|co|net|edu|gov)$", "", app_name_clean)
+        alias_key = alias_key.replace(" ", "").replace("-", "")
         if alias_key in WEBSITE_ALIASES:
             target_url = WEBSITE_ALIASES[alias_key]
             logger.debug(f"Resolved friendly website shortcut: '{alias_key}' -> {target_url}")
