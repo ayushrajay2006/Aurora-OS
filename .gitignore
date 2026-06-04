@@ -12,7 +12,7 @@ __pycache__/
 .ipynb_checkpoints
 
 # Logs
-logs/*.log
+logs/
 
 # IDE & Editor Settings
 .vscode/
@@ -34,3 +34,7 @@ memory.db
 
 # Local Configuration
 config.json
+
+# Audio and Model assets
+models/
+*.wav

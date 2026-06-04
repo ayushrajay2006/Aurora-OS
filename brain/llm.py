@@ -228,8 +228,16 @@ class LlmClient:
             res.close()
 
     def _prepare_gemini_payload(self, messages: List[Dict[str, str]]):
+        import base64
+        import re
+        import os
+        
         system_instruction = None
         contents = []
+        
+        # Match standard absolute Windows or Unix paths pointing to PNG, JPG, or JPEG images
+        image_path_pattern = re.compile(r"([a-zA-Z]:\\[^\s\"]+\.(?:png|jpg|jpeg))|(/[^\s\"]+\.(?:png|jpg|jpeg))", re.IGNORECASE)
+        
         for msg in messages:
             role = msg.get("role")
             content = msg.get("content")
@@ -238,11 +246,36 @@ class LlmClient:
                     "parts": [{"text": content}]
                 }
             else:
-                # Map role "assistant" to "model" for Gemini API compliance
                 gemini_role = "model" if role == "assistant" else "user"
+                parts = [{"text": content}]
+                
+                # Check for image paths in the message content text
+                matches = image_path_pattern.findall(content)
+                for match in matches:
+                    # Find the first non-empty match group
+                    path = next((m for m in match if m), "").strip()
+                    if path and os.path.exists(path):
+                        try:
+                            logger.info(f"LlmClient: Attaching image file '{path}' to Gemini API request payload")
+                            with open(path, "rb") as img_file:
+                                encoded_image = base64.b64encode(img_file.read()).decode("utf-8")
+                            
+                            mime_type = "image/png"
+                            if path.lower().endswith(".jpg") or path.lower().endswith(".jpeg"):
+                                mime_type = "image/jpeg"
+                                
+                            parts.append({
+                                "inlineData": {
+                                    "mimeType": mime_type,
+                                    "data": encoded_image
+                                }
+                            })
+                        except Exception as e:
+                            logger.error(f"LlmClient: Failed to read or encode image file '{path}': {e}")
+                            
                 contents.append({
                     "role": gemini_role,
-                    "parts": [{"text": content}]
+                    "parts": parts
                 })
         return system_instruction, contents
 

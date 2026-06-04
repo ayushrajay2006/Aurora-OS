@@ -14,6 +14,8 @@ import tools.search_files
 import tools.read_pdf
 import tools.memory_control
 import tools.delete_file
+import tools.capture_screen
+import tools.read_ocr
 from tools.registry import registry
 
 def print_banner():
@@ -317,10 +319,16 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
     if len(chat_history) > 30:
         chat_history = chat_history[-30:]
         
-    state_manager.update_state(status="Online")
-    
-    # Speech is handled step-by-step
-        
+    # Clean up active_screen.png if it exists at the end of the turn loop to save space and prevent re-uploading
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    active_screen_path = os.path.join(project_root, "logs", "active_screen.png")
+    if os.path.exists(active_screen_path):
+        try:
+            os.remove(active_screen_path)
+            logger.info(f"Cleaned up active screen capture at {active_screen_path}")
+        except Exception as e:
+            logger.warning(f"Failed to clean up active screen capture: {e}")
+
     return final_reply
 
 
