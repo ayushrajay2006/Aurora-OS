@@ -64,7 +64,7 @@ def verify_ollama_setup() -> bool:
     state_manager.update_state(status="Online", model_name=model_name)
     return True
 
-def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voice_output: bool) -> str:
+def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voice_output: bool, stt_manager=None) -> str:
     """Executes a single assistant turn: plans, executes tools, and returns final verbal reply."""
     # Log and save message
     memory.save_message("user", user_input)
@@ -164,6 +164,10 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
             else:
                 final_reply = reply
             state_manager.add_message("assistant", reply)
+            
+            # Speak intermediate responses immediately
+            if voice_output and tts_manager:
+                tts_manager.speak(reply)
         
         # Filter out null/None actions
         valid_actions = []
@@ -198,7 +202,19 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
             cancelled = False
             if risk_level == "medium":
                 print(f"     [!] CONFIRMATION REQUIRED: Aurora wants to run '{tool_name}' with args {args}.")
-                user_confirm = input("         Do you want to execute this action? (y/N): ").strip().lower()
+                if stt_manager and tts_manager:
+                    tts_manager.speak(f"I need your confirmation to run {tool_name}. Should I proceed?")
+                    print("         [Voice Confirmation] Speak 'yes' or 'no': ", end="", flush=True)
+                    voice_confirm = stt_manager.listen_and_transcribe(timeout=5.0, phrase_time_limit=4.0).strip().lower()
+                    print(f"Received: '{voice_confirm}'")
+                    if any(w in voice_confirm for w in ["yes", "yeah", "sure", "proceed", "ok", "okay", "y"]):
+                        tts_manager.speak("Proceeding.")
+                        user_confirm = "yes"
+                    else:
+                        tts_manager.speak("Cancelled.")
+                        user_confirm = "no"
+                else:
+                    user_confirm = input("         Do you want to execute this action? (y/N): ").strip().lower()
                 if user_confirm not in ["y", "yes"]:
                     print(f"     [-] Action '{tool_name}' cancelled by user.")
                     memory.update_action(action_id, "cancelled", {"output": "Cancelled by user confirmation."})
@@ -208,7 +224,19 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
             elif risk_level == "high":
                 print(f"     [!] HIGH RISK ACTION: Aurora wants to run '{tool_name}' with args {args}.")
                 expected_input = "DELETE" if "delete" in tool_name.lower() else "EXECUTE"
-                user_confirm = input(f"         Please type '{expected_input}' to continue: ").strip()
+                if stt_manager and tts_manager:
+                    tts_manager.speak(f"This is a high risk action to delete files. Please say {expected_input} to confirm, or cancel to abort.")
+                    print(f"         [Voice Confirmation] Speak '{expected_input}' to continue: ", end="", flush=True)
+                    voice_confirm = stt_manager.listen_and_transcribe(timeout=5.0, phrase_time_limit=4.0).strip().upper()
+                    print(f"Received: '{voice_confirm}'")
+                    if expected_input in voice_confirm:
+                        tts_manager.speak("Executing high risk action.")
+                        user_confirm = expected_input
+                    else:
+                        tts_manager.speak("Aborted.")
+                        user_confirm = "CANCEL"
+                else:
+                    user_confirm = input(f"         Please type '{expected_input}' to continue: ").strip()
                 if user_confirm != expected_input:
                     print(f"     [-] Action '{tool_name}' aborted (verification mismatch).")
                     memory.update_action(action_id, "cancelled", {"output": "Aborted: verification mismatch."})
@@ -242,9 +270,7 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
         
     state_manager.update_state(status="Online")
     
-    # Speak final response if voice output is active
-    if voice_output and tts_manager and final_reply:
-        tts_manager.speak(final_reply)
+    # Speech is handled step-by-step
         
     return final_reply
 
@@ -301,7 +327,7 @@ def run_chat_loop(voice_input: bool = False, voice_output: bool = False):
                     tts_manager.speak("Goodbye.")
                 break
                 
-            execute_assistant_turn(user_input, chat_history, tts_manager, voice_output)
+            execute_assistant_turn(user_input, chat_history, tts_manager, voice_output, stt_manager=stt_manager)
             
         except (KeyboardInterrupt, EOFError, StopIteration):
             print("\nClosing Aurora. Goodbye!")
@@ -375,7 +401,7 @@ def run_voice_activation_loop(tts_manager, stt_manager):
                     continue
                 
                 # Execute assistant turn
-                execute_assistant_turn(user_input, chat_history, tts_manager, voice_output)
+                execute_assistant_turn(user_input, chat_history, tts_manager, voice_output, stt_manager=stt_manager)
                 
         except (KeyboardInterrupt, EOFError, StopIteration):
             print("\nClosing Aurora Voice Activation Loop. Goodbye!")
