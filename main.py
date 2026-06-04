@@ -69,7 +69,7 @@ def run_chat_loop():
     print("-" * 60)
     
     # Load past database history for context
-    history_records = memory.load_history(limit=10)
+    history_records = memory.load_history(limit=30)
     chat_history = []
     for r in history_records:
         chat_history.append({"role": r["role"], "content": r["content"]})
@@ -164,8 +164,8 @@ def run_chat_loop():
             # Keep history buffer capped
             chat_history.append({"role": "user", "content": user_input})
             chat_history.append({"role": "assistant", "content": reply})
-            if len(chat_history) > 20:
-                chat_history = chat_history[-20:]
+            if len(chat_history) > 30:
+                chat_history = chat_history[-30:]
                 
             if actions:
                 print("\nPlanned Actions:")
