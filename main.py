@@ -13,6 +13,7 @@ import tools.open_website
 import tools.search_files
 import tools.read_pdf
 import tools.memory_control
+import tools.delete_file
 from tools.registry import registry
 
 def print_banner():
