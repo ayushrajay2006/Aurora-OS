@@ -1,6 +1,9 @@
 import os
 import winreg
 import subprocess
+import ctypes
+import csv
+import io
 from typing import Optional, Dict, Any
 from tools.registry import registry, BaseTool
 from config.logging import logger
@@ -235,21 +238,76 @@ class OpenAppTool(BaseTool):
             logger.error(msg)
             return {"success": False, "output": msg}
 
+def get_pids_by_window_title(search_title: str) -> list:
+    """Finds PIDs of processes whose visible window titles contain search_title (case-insensitive)."""
+    EnumWindows = ctypes.windll.user32.EnumWindows
+    EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+    GetWindowText = ctypes.windll.user32.GetWindowTextW
+    GetWindowTextLength = ctypes.windll.user32.GetWindowTextLengthW
+    IsWindowVisible = ctypes.windll.user32.IsWindowVisible
+    GetWindowThreadProcessId = ctypes.windll.user32.GetWindowThreadProcessId
+    
+    pids = []
+    search_lower = search_title.lower().strip()
+    
+    def foreach_window(hwnd, lParam):
+        if IsWindowVisible(hwnd):
+            length = GetWindowTextLength(hwnd)
+            if length > 0:
+                buffer = ctypes.create_unicode_buffer(length + 1)
+                GetWindowText(hwnd, buffer, length + 1)
+                title = buffer.value.lower()
+                if search_lower in title:
+                    pid = ctypes.c_ulong()
+                    GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+                    if pid.value not in pids:
+                        pids.append(pid.value)
+        return True
+        
+    EnumWindows(EnumWindowsProc(foreach_window), 0)
+    return pids
+
 def close_process_by_name(name: str) -> dict:
-    """Closes a process or application on Windows by name using taskkill with fuzzy and substring matching."""
+    """Closes a process or application on Windows by name using window titles and fuzzy process matching."""
     name_clean = name.strip()
     if not name_clean:
         return {"success": False, "output": "Empty process name provided."}
 
-    # Gather potential executable names to terminate
+    logger.info(f"Attempting to close process/app by name: '{name_clean}'")
+    terminated_count = 0
+    errors = []
+
+    # --- 1. Win32 Window Title Scanner ---
+    try:
+        window_pids = get_pids_by_window_title(name_clean)
+        if window_pids:
+            logger.info(f"Found active window PIDs for '{name_clean}': {window_pids}")
+            for pid in window_pids:
+                res = subprocess.run(["taskkill", "/f", "/pid", str(pid)], capture_output=True, text=True, check=False)
+                if res.returncode == 0:
+                    terminated_count += 1
+                    logger.info(f"Successfully closed process PID {pid} matching window title '{name_clean}'")
+                elif "Access is denied" in res.stderr:
+                    errors.append(f"PID {pid}: Access was denied. This usually means the application is running with elevated privileges and requires administrator privileges to close.")
+                else:
+                    errors.append(f"PID {pid}: {res.stderr.strip()}")
+    except Exception as e:
+        logger.error(f"Error executing Window Title Scanner: {e}")
+
+    # If we successfully closed at least one window process, return success
+    if terminated_count > 0:
+        return {
+            "success": True,
+            "output": f"Successfully closed running instances of '{name_clean}' via window title scanner."
+        }
+
+    # --- 2. Fallback: Fuzzy Process Name Scanner ---
     targets = []
-    
-    # 1. Direct matching
     targets.append(name_clean)
     if not name_clean.lower().endswith(".exe"):
         targets.append(f"{name_clean}.exe")
         
-    # 2. Handle common hardcoded aliases
+    # Expanded alias map
     alias_map = {
         "epic games launcher": "EpicGamesLauncher.exe",
         "epicgameslauncher": "EpicGamesLauncher.exe",
@@ -264,7 +322,11 @@ def close_process_by_name(name: str) -> dict:
         "calculator": "calc.exe",
         "task manager": "taskmgr.exe",
         "taskmanager": "taskmgr.exe",
-        "taskmgr": "taskmgr.exe"
+        "taskmgr": "taskmgr.exe",
+        "free download manager": "fdm.exe",
+        "fdm": "fdm.exe",
+        "spotify": "Spotify.exe",
+        "steam": "steam.exe"
     }
     alias_key = name_clean.lower()
     if alias_key in alias_map:
@@ -272,39 +334,43 @@ def close_process_by_name(name: str) -> dict:
         if alias_target not in targets:
             targets.append(alias_target)
 
-    # 3. Dynamic running process scanning (substring and word-based matching)
+    # Scan running processes via tasklist using standard CSV parser
     try:
-        # Fetch all running processes using tasklist
         res = subprocess.run(["tasklist", "/fo", "csv", "/nh"], capture_output=True, text=True, check=False)
         if res.returncode == 0:
-            lines = res.stdout.strip().split("\n")
+            reader = csv.reader(io.StringIO(res.stdout))
             running_exes = []
-            for line in lines:
-                if not line.strip():
-                    continue
-                # Split CSV row: e.g. "taskhostw.exe","2468","Services","0","15,232 K"
-                parts = [p.strip('"') for p in line.split(",")]
-                if parts:
-                    exe_name = parts[0]
+            for row in reader:
+                if row:
+                    exe_name = row[0]
                     if exe_name.lower().endswith(".exe") and exe_name not in running_exes:
                         running_exes.append(exe_name)
                         
-            # Fuzzy match running processes
             cleaned_search = name_clean.lower().replace(" ", "")
             search_words = [w.lower() for w in name_clean.split() if len(w) >= 3]
+            
+            # Formulate acronym (e.g. "Free Download Manager" -> "fdm")
+            words_all = [w for w in name_clean.split() if w]
+            acronym = "".join([w[0].lower() for w in words_all]) if len(words_all) > 1 else ""
             
             for exe in running_exes:
                 exe_lower = exe.lower()
                 exe_no_ext = exe_lower.replace(".exe", "")
                 exe_clean = exe_no_ext.replace(" ", "").replace("_", "").replace("-", "")
                 
-                # Check 3.1: Search term (without spaces) is inside the process name (without spaces/extensions) or vice versa
+                # Check A: Direct clean name containment
                 if cleaned_search in exe_clean or exe_clean in cleaned_search:
                     if exe not in targets:
                         targets.append(exe)
                         continue
                         
-                # Check 3.2: Any search word of length >= 3 matches a running process name
+                # Check B: Acronym match
+                if acronym and (acronym == exe_clean or acronym in exe_clean or exe_clean in acronym):
+                    if exe not in targets:
+                        targets.append(exe)
+                        continue
+                        
+                # Check C: Word match
                 for word in search_words:
                     if word in exe_clean:
                         if exe not in targets:
@@ -313,34 +379,24 @@ def close_process_by_name(name: str) -> dict:
     except Exception as e:
         logger.error(f"Failed to scan running processes: {e}")
 
-    # Remove duplicates but keep order
+    # Remove duplicates
     unique_targets = []
     for t in targets:
         if t not in unique_targets:
             unique_targets.append(t)
             
-    logger.info(f"Resolved process targets for '{name}': {unique_targets}")
+    logger.info(f"Fuzzy fallback process targets resolved: {unique_targets}")
     
-    # Run taskkill for each target
-    success_count = 0
-    errors = []
-    
+    # Try terminating by executable name
     for target in unique_targets:
         try:
-            # /f forces termination, /im specifies image name
-            res = subprocess.run(
-                ["taskkill", "/f", "/im", target],
-                capture_output=True,
-                text=True,
-                check=False
-            )
+            res = subprocess.run(["taskkill", "/f", "/im", target], capture_output=True, text=True, check=False)
             if res.returncode == 0:
-                success_count += 1
+                terminated_count += 1
                 logger.info(f"Successfully closed process matching: '{target}'")
             elif "Access is denied" in res.stderr:
-                errors.append(f"'{target}': Access was denied. This usually means the application (like Task Manager) is running with administrator/elevated privileges and requires Aurora's host terminal to be run as Administrator to terminate it.")
+                errors.append(f"'{target}': Access was denied. This usually means the application is running with elevated privileges and requires administrator privileges to close.")
             elif "not found" in res.stderr.lower():
-                # Process not running - only log if it's the direct user input name
                 if target.lower() == name_clean.lower() or target.lower() == f"{name_clean.lower()}.exe":
                     errors.append(f"'{target}': Process not found or not running.")
             else:
@@ -348,21 +404,17 @@ def close_process_by_name(name: str) -> dict:
         except Exception as e:
             errors.append(f"Failed to execute taskkill for '{target}': {e}")
             
-    if success_count > 0:
+    if terminated_count > 0:
         return {
             "success": True,
-            "output": f"Successfully closed running instances of '{name}'."
+            "output": f"Successfully closed running instances of '{name_clean}'."
         }
     else:
-        # If nothing succeeded, return failure details
-        unique_errors = []
-        for err in errors:
-            if err not in unique_errors:
-                unique_errors.append(err)
+        unique_errors = list(set(errors))
         err_msg = "; ".join(unique_errors) if unique_errors else "Process not found or not running."
         return {
             "success": False,
-            "output": f"Could not close '{name}': {err_msg}"
+            "output": f"Could not close '{name_clean}': {err_msg}"
         }
 
 @registry.register(
