@@ -52,6 +52,11 @@ Let me open Notepad for you.
 8. To open specific Windows system folders or directories (such as the Recycle Bin, Downloads, Documents, Control Panel, or This PC), always call the `open_app` tool with the name of the folder itself as the argument (e.g. `open_app(app_name='downloads')` or `open_app(app_name='recycle bin')`), NOT just 'explorer'.
 9. **Proactive Memory Recording**: You must be proactive in recording key personal facts, preferences, and system settings (such as the user's name, age, birthday, favorite games, or custom folder paths). However, do NOT record casual chit-chat, temporary statuses (e.g., playing a game "recently"), or fleeting conversational comments. Only save facts that have long-term utility for personalizing system actions. Do not call 'remember_fact' if the key-value pair is already listed in the 'Stored Long-Term Memories & Preferences' section, unless the value has changed.
 10. **Preventing Technical Hallucinations (Search Rule)**: You must never guess or hallucinate specific complex formulas, Rubik's cube algorithms (e.g., CFOP PLL/OLL algorithms), scientific constants, or detailed technical references that you do not have stored in your long-term memories or local files. If the user asks for such technical information, you MUST NOT generate them from memory. Instead, call the `open_website` tool with a descriptive search query (e.g., `open_website(url="standard CFOP PLL algorithms sheet")`) to perform a Google search on the user's browser, ensuring they receive accurate information.
+11. **Speech Target Formatting**: If your text response contains detailed lists, files, paths, or code logs, you MUST write a separate spoken summary wrapped inside a `<speech>...</speech>` tag. The speech text must be highly conversational, extremely brief (one natural sentence), and summarize the results or action. Avoid reading raw lists, paths, or command blocks in the speech tag. Example:
+   Here are the files I found in desktop:
+   1. C:\\Users\\ayush\\Desktop\\log.txt
+   2. C:\\Users\\ayush\\Desktop\\note.txt
+   <speech>I found two text files on your desktop. Let me know if you want me to read either of them.</speech>
 """
 
 class Planner:
@@ -69,11 +74,11 @@ class Planner:
             text_lines.append("")
         return "\n".join(text_lines)
 
-    def parse_response(self, response_text: str) -> Tuple[str, List[Dict[str, Any]]]:
+    def parse_response(self, response_text: str) -> Tuple[str, List[Dict[str, Any]], str]:
         """
-        Parses LLM response to separate conversational text from structured planned actions.
+        Parses LLM response to separate conversational text from structured planned actions and speech text.
         Returns:
-            Tuple of (conversational_text, list_of_actions)
+            Tuple of (conversational_text, list_of_actions, speech_text)
         """
         actions = []
         clean_text = response_text
@@ -96,9 +101,27 @@ class Planner:
             except Exception as e:
                 logger.error(f"Failed to parse tool JSON block: {match}. Error: {e}")
                 
+        # Regex to find speech block: <speech>...</speech>
+        speech_pattern = re.compile(r"<speech>\s*(.*?)\s*</speech>", re.DOTALL)
+        speech_matches = speech_pattern.findall(clean_text)
+        
+        speech_text = ""
+        if speech_matches:
+            speech_text = " ".join([m.strip() for m in speech_matches])
+            for match in speech_matches:
+                clean_text = clean_text.replace(f"<speech>{match}</speech>", "")
+                clean_text = clean_text.replace(f"<speech>\n{match}\n</speech>", "")
+                clean_text = clean_text.replace(f"<speech>\n{match}</speech>", "")
+                clean_text = clean_text.replace(f"<speech>{match}\n</speech>", "")
+                
         # Clean up any trailing whitespace or empty lines
         clean_text = clean_text.strip()
-        return clean_text, actions
+        
+        # Default speech text to cleaned text if no explicit tag was generated
+        if not speech_text:
+            speech_text = clean_text
+            
+        return clean_text, actions, speech_text
 
     def create_plan(self, user_prompt: str, history: List[Dict[str, str]]) -> Tuple[str, List[Dict[str, Any]]]:
         """
@@ -127,7 +150,7 @@ class Planner:
             raw_response = llm_client.chat(messages, stream=False)
             logger.debug(f"Raw LLM response: {raw_response}")
             
-            conversational_text, actions = self.parse_response(raw_response)
+            conversational_text, actions, speech_text = self.parse_response(raw_response)
             logger.info(f"Parsed conversational reply: '{conversational_text}'")
             logger.info(f"Parsed actions: {actions}")
             return conversational_text, actions

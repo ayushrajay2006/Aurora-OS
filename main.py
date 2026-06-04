@@ -157,7 +157,7 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
         chat_history.append({"role": "assistant", "content": full_text})
         
         # Parse the full text for actions
-        reply, actions = planner.parse_response(full_text)
+        reply, actions, speech_text = planner.parse_response(full_text)
         
         # If there is conversational text, accumulate it and update state manager
         if reply:
@@ -167,9 +167,9 @@ def execute_assistant_turn(user_input: str, chat_history: list, tts_manager, voi
                 final_reply = reply
             state_manager.add_message("assistant", reply)
             
-            # Speak intermediate responses immediately
+            # Speak intermediate responses immediately using the parsed speech text
             if voice_output and tts_manager:
-                tts_manager.speak(reply)
+                tts_manager.speak(speech_text)
         
         # Filter out null/None actions
         valid_actions = []
