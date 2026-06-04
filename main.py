@@ -87,7 +87,6 @@ def run_chat_loop():
             memory.save_message("user", user_input)
             state_manager.add_message("user", user_input)
             
-            print("Aurora > ", end="", flush=True)
             state_manager.update_state(status="Thinking")
             
             # Retrieve long term memories to inject into system prompt
@@ -104,97 +103,119 @@ def run_chat_loop():
                 memories_text=memories_text
             )
             
+            # Message list for this multi-step turn
             messages = [{"role": "system", "content": system_prompt}]
             messages.extend(chat_history)
             messages.append({"role": "user", "content": user_input})
             
-            # Real-time token streaming with backtick-buffering filter
-            full_text = ""
-            buffer = ""
-            json_started = False
+            MAX_STEPS = 5
+            step = 1
+            final_reply = ""
             
-            try:
-                stream = llm_client.chat(messages, stream=True)
-                for chunk in stream:
-                    full_text += chunk
-                    if json_started:
-                        continue
-                        
-                    buffer += chunk
-                    if "```json" in buffer:
-                        json_started = True
-                        parts = buffer.split("```json")
-                        sys.stdout.write(parts[0])
-                        sys.stdout.flush()
-                        buffer = ""
-                    elif buffer.startswith("`") or "`" in buffer:
-                        if len(buffer) < 7:
+            while step <= MAX_STEPS:
+                state_manager.update_state(status="Thinking")
+                
+                # Dynamic visual step header
+                if step == 1:
+                    print("Aurora > ", end="", flush=True)
+                else:
+                    print(f"\nAurora (Step {step}) > ", end="", flush=True)
+                
+                # Real-time token streaming with backtick-buffering filter
+                full_text = ""
+                buffer = ""
+                json_started = False
+                
+                try:
+                    stream = llm_client.chat(messages, stream=True)
+                    for chunk in stream:
+                        full_text += chunk
+                        if json_started:
                             continue
+                            
+                        buffer += chunk
+                        if "```json" in buffer:
+                            json_started = True
+                            parts = buffer.split("```json")
+                            sys.stdout.write(parts[0])
+                            sys.stdout.flush()
+                            buffer = ""
+                        elif buffer.startswith("`") or "`" in buffer:
+                            if len(buffer) < 7:
+                                continue
+                            else:
+                                if not "```json".startswith(buffer[:len(buffer)]):
+                                    sys.stdout.write(buffer)
+                                    sys.stdout.flush()
+                                    buffer = ""
                         else:
-                            if not "```json".startswith(buffer[:len(buffer)]):
-                                sys.stdout.write(buffer)
-                                sys.stdout.flush()
-                                buffer = ""
-                    else:
+                            sys.stdout.write(buffer)
+                            sys.stdout.flush()
+                            buffer = ""
+                            
+                    # Flush any remaining buffer if json wasn't started
+                    if buffer and not json_started:
                         sys.stdout.write(buffer)
                         sys.stdout.flush()
-                        buffer = ""
-                        
-                # Flush any remaining buffer if json wasn't started
-                if buffer and not json_started:
-                    sys.stdout.write(buffer)
-                    sys.stdout.flush()
+                    
+                    # Print newline to end the Aurora response line neatly
+                    print()
+                    
+                except Exception as e:
+                    print() # clear line
+                    logger.error(f"Ollama streaming chat failed: {e}", exc_info=True)
+                    print(f"Aurora > Error communicating with LLM service: {e}")
+                    break
+                    
+                # Parse the full text for actions
+                reply, actions = planner.parse_response(full_text)
                 
-                # Print newline to end the Aurora response line neatly
-                print()
+                # If there is conversational text, accumulate it
+                if reply:
+                    if final_reply:
+                        final_reply += "\n\n" + reply
+                    else:
+                        final_reply = reply
                 
-            except Exception as e:
-                print() # clear line
-                logger.error(f"Ollama streaming chat failed: {e}", exc_info=True)
-                print(f"Aurora > Error communicating with LLM service: {e}")
-                continue
-                
-            # Parse the full text for actions
-            reply, actions = planner.parse_response(full_text)
-            
-            # Save to memory and state
-            memory.save_message("assistant", reply)
-            state_manager.add_message("assistant", reply)
-            
-            # Keep history buffer capped
-            chat_history.append({"role": "user", "content": user_input})
-            chat_history.append({"role": "assistant", "content": reply})
-            if len(chat_history) > 30:
-                chat_history = chat_history[-30:]
-                
-            if actions:
+                # Filter out null/None actions
+                valid_actions = []
+                if actions:
+                    for act in actions:
+                        tool_name = act.get("tool")
+                        if tool_name and str(tool_name).lower() not in ["none", "null"]:
+                            valid_actions.append(act)
+                            
+                if not valid_actions:
+                    break
+                    
+                # We have actions to execute!
                 print("\nPlanned Actions:")
-                state_manager.set_planned_actions(actions)
-                for idx, act in enumerate(actions, 1):
+                state_manager.set_planned_actions(valid_actions)
+                
+                tool_results = []
+                for idx, act in enumerate(valid_actions, 1):
                     tool_name = act.get("tool")
                     args = act.get("args", {})
                     
-                    # Ignore dummy/conversational None action blocks
-                    if not tool_name or str(tool_name).lower() in ["none", "null"]:
-                        continue
-                        
                     print(f"  {idx}. Tool: '{tool_name}' | Arguments: {args}")
                     
                     # Log planned tool call
-                    action_id = f"act_{int(time.time())}_{idx}"
+                    action_id = f"act_{int(time.time())}_{step}_{idx}"
                     memory.log_action(action_id, tool_name, args, "planned")
                     
                     # Safety gates based on risk level
                     tool = registry.get_tool(tool_name)
                     risk_level = tool.risk_level if tool else "low"
                     
+                    cancelled = False
                     if risk_level == "medium":
                         print(f"     [!] CONFIRMATION REQUIRED: Aurora wants to run '{tool_name}' with args {args}.")
                         user_confirm = input("         Do you want to execute this action? (y/N): ").strip().lower()
                         if user_confirm not in ["y", "yes"]:
                             print(f"     [-] Action '{tool_name}' cancelled by user.")
                             memory.update_action(action_id, "cancelled", {"output": "Cancelled by user confirmation."})
-                            continue
+                            tool_results.append(f"- Tool '{tool_name}' cancelled by user.")
+                            cancelled = True
                             
                     elif risk_level == "high":
                         print(f"     [!] HIGH RISK ACTION: Aurora wants to run '{tool_name}' with args {args}.")
@@ -203,18 +224,46 @@ def run_chat_loop():
                         if user_confirm != expected_input:
                             print(f"     [-] Action '{tool_name}' aborted (verification mismatch).")
                             memory.update_action(action_id, "cancelled", {"output": "Aborted: verification mismatch."})
-                            continue
+                            tool_results.append(f"- Tool '{tool_name}' aborted by user.")
+                            cancelled = True
                     
+                    if cancelled:
+                        continue
+                        
                     # Execute tool
                     print(f"     [*] Executing '{tool_name}'...")
                     state_manager.update_state(status="Executing")
                     res = registry.execute_tool(tool_name, args)
-                    print(f"     [Result] Success={res.get('success')} | Output='{res.get('output')}'")
-                    memory.update_action(action_id, "success" if res.get("success") else "failed", res)
+                    success = res.get("success", False)
+                    output = res.get("output", "")
                     
+                    print(f"     [Result] Success={success} | Output='{output}'")
+                    memory.update_action(action_id, "success" if success else "failed", res)
+                    tool_results.append(f"- Tool '{tool_name}' completed. Success={success}. Output: {output}")
+                    
+                # Append tool outputs to messages list for the next loop execution
+                messages.append({"role": "assistant", "content": full_text})
+                
+                results_text = "\n".join(tool_results)
+                messages.append({"role": "user", "content": f"Execution Results:\n{results_text}"})
+                
+                step += 1
+                
+            # Loop ended or capped. Save final conversational reply to SQLite and history
+            if not final_reply:
+                final_reply = "I have completed all planned operations."
+                
+            memory.save_message("assistant", final_reply)
+            state_manager.add_message("assistant", final_reply)
+            
+            chat_history.append({"role": "user", "content": user_input})
+            chat_history.append({"role": "assistant", "content": final_reply})
+            if len(chat_history) > 30:
+                chat_history = chat_history[-30:]
+                
             state_manager.update_state(status="Online")
             
-        except (KeyboardInterrupt, EOFError):
+        except (KeyboardInterrupt, EOFError, StopIteration):
             print("\nClosing Aurora. Goodbye!")
             break
         except Exception as e:

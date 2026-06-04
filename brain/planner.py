@@ -38,9 +38,9 @@ Let me open Notepad for you.
 ]
 ```
 3. **State-Dependent Planning Constraint**: If a tool call depends on the output of a preceding tool call (for example, you need to find a file path using `search_files` before you can call `summarize_file` or `read_file` on it):
-   - **DO NOT** plan both tools in a single turn.
+   - **DO NOT** plan both tools in a single JSON block.
    - **DO NOT** use placeholder paths like `"/path/to/file"` or empty strings `""` for arguments.
-   - Instead, plan **ONLY the first tool** (e.g., `search_files`) and wait for the user to return the execution result. Once the real path is returned to you in the next chat turn, you can then plan the subsequent tool (e.g., `summarize_file`) using the real, actual file path.
+   - Instead, plan **ONLY the first tool** (e.g., `search_files`). Once the real path/output is returned to you in the next background execution turn, you will be prompted again to immediately plan the subsequent tool (e.g., `summarize_file`) using the real, actual value.
 4. Only plan multiple tool calls in a single turn if they are completely **independent** or if the arguments for all tools are already known with 100% certainty (e.g., `open_app("notepad")` and `open_app("calc")`).
 5. **Handling Index References in Lists**: If the user refers to an item from a list in the conversation history by its index number or relative position (e.g., "tell me about 1", "read the 2nd file", "open the first one"):
    - Identify the matching item from the previous tool output (such as search results).
