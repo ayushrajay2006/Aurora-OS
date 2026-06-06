@@ -253,6 +253,7 @@ class OpenAppTool(BaseTool):
             if "discord" in app_name.lower() and resolved_path.endswith("Update.exe"):
                 # Discord Update.exe needs --processStart=Discord.exe
                 subprocess.Popen([resolved_path, "--processStart=Discord.exe"])
+                focus_app_window(app_name)
                 return {"success": True, "output": f"Successfully launched Discord using updater."}
                 
             # Standard launching using os.startfile (safer, handles .lnk files natively)
@@ -267,20 +268,48 @@ class OpenAppTool(BaseTool):
                     if shutil.which(cmd_base + ext):
                         resolved_cmd = cmd_base + ext
                         break
-                if not resolved_cmd:
-                    msg = f"Failed to open '{app_name}': '{cmd_base}' is not recognized as an internal or external command, operable program or batch file."
-                    logger.error(msg)
-                    return {"success": False, "output": msg}
                 
-                # System utilities in PATH like cmd or calc
-                subprocess.Popen(resolved_path, shell=True)
+                if resolved_cmd:
+                    subprocess.Popen(resolved_path, shell=True)
+                else:
+                    # Ultimate fallback: let Windows 'start' command try to resolve it via Registry natively
+                    logger.info(f"Command '{cmd_base}' not in PATH. Falling back to native Windows 'start'.")
+                    res = os.system(f"start {resolved_path}")
+                    if res != 0:
+                        msg = f"Failed to open '{app_name}': '{cmd_base}' is not recognized by the system."
+                        logger.error(msg)
+                        return {"success": False, "output": msg}
                 
+            focus_app_window(app_name)
             logger.info(f"Successfully launched: '{app_name}'")
             return {"success": True, "output": f"Successfully opened '{app_name}'."}
         except Exception as e:
             msg = f"Failed to open '{app_name}': {e}"
             logger.error(msg)
             return {"success": False, "output": msg}
+
+def focus_app_window(app_name: str, delay: float = 2.0):
+    """Wait for application to open, then find its window and bring it to focus."""
+    import time
+    time.sleep(delay)
+    try:
+        import pygetwindow as gw
+        app_name_clean = app_name.lower().strip()
+        logger.info(f"Searching for application window to focus: '{app_name_clean}'")
+        
+        for w in gw.getAllWindows():
+            if w.title:
+                title_lower = w.title.lower()
+                if app_name_clean in title_lower or any(word in title_lower for word in app_name_clean.split() if len(word) >= 3):
+                    if w.isMinimized:
+                        w.restore()
+                    w.activate()
+                    logger.info(f"Successfully focused app window: '{w.title}'")
+                    return True
+        logger.warning(f"Could not find any window matching '{app_name_clean}' to focus.")
+    except Exception as e:
+        logger.warning(f"Error focusing app window: {e}")
+    return False
 
 def get_pids_by_window_title(search_title: str) -> list:
     """Finds PIDs of processes whose window titles contain search_title (case-insensitive)."""

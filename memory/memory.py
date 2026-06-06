@@ -114,6 +114,8 @@ class Memory:
                 )
                 conn.commit()
             logger.info(f"Memory updated: {key} = {value}")
+            from config.event_bus import event_bus
+            event_bus.publish("memory_written", key=key, value=value, timestamp=timestamp)
         except Exception as e:
             logger.error(f"Error setting memory key '{key}': {e}")
 

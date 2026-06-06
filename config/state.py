@@ -22,6 +22,15 @@ class StateManager:
         self._state = AppState()
         self._lock = threading.Lock()
         self._callbacks = []
+        self._subscribe_to_events()
+
+    def _subscribe_to_events(self):
+        from config.event_bus import event_bus
+        event_bus.subscribe("task_started", lambda **kw: self.update_state(status="EXECUTING"))
+        event_bus.subscribe("task_verifying", lambda **kw: self.update_state(status="VERIFYING"))
+        event_bus.subscribe("task_completed", lambda **kw: self.update_state(status="IDLE"))
+        event_bus.subscribe("task_failed", lambda **kw: self.update_state(status="IDLE"))
+        event_bus.subscribe("recovery_started", lambda **kw: self.update_state(status="RECOVERING"))
 
     def register_callback(self, callback):
         """Register a callback that triggers whenever state changes."""

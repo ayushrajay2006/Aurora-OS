@@ -122,6 +122,7 @@ class OpenWebsiteTool(BaseTool):
                         subprocess.Popen([resolved_path, target_url])
                     else:
                         subprocess.Popen(f'start {resolved_path} "{target_url}"', shell=True)
+                    focus_browser_window(target_url)
                     logger.info(f"Successfully opened {target_url} in specific browser '{browser}'")
                     return {"success": True, "output": f"Successfully opened website in {browser}: {target_url}"}
                 except Exception as e:
@@ -132,9 +133,44 @@ class OpenWebsiteTool(BaseTool):
         try:
             # Open in user's default configured browser (Chrome, Brave, Edge, etc.)
             webbrowser.open(target_url)
+            focus_browser_window(target_url)
             logger.info(f"Successfully opened website: {target_url}")
-            return {"success": True, "output": f"Successfully opened website: {target_url}"}
+            return {"success": True, "output": f"Successfully opened website: {target_url}. The page is loading — wait for it to fully load before calling find_on_screen or interacting with page elements."}
         except Exception as e:
             msg = f"Failed to open website '{target_url}': {e}"
             logger.error(msg)
             return {"success": False, "output": msg}
+
+def focus_browser_window(url: str, delay: float = 5.0):
+    """Wait for browser to open, then find the browser window and bring it to focus."""
+    import time
+    time.sleep(delay)
+    try:
+        import pygetwindow as gw
+        # Identify common browser keywords or key strings in the URL (e.g. 'youtube', 'gmail')
+        domain_keywords = []
+        parsed = urllib.parse.urlparse(url)
+        netloc = parsed.netloc or url
+        parts = netloc.split('.')
+        for p in parts:
+            if p not in ("www", "com", "org", "net", "co", "in"):
+                domain_keywords.append(p)
+        
+        # Add general browser names
+        browser_keywords = ["chrome", "edge", "brave", "firefox", "opera", "safari"]
+        all_keywords = domain_keywords + browser_keywords
+        
+        logger.info(f"Searching for window with keywords to focus: {all_keywords}")
+        for w in gw.getAllWindows():
+            if w.title:
+                w_title_lower = w.title.lower()
+                if any(kw.lower() in w_title_lower for kw in all_keywords):
+                    if w.isMinimized:
+                        w.restore()
+                    w.activate()
+                    logger.info(f"Successfully focused browser window: '{w.title}'")
+                    return True
+        logger.warning("Could not find any window matching browser or website keywords to focus.")
+    except Exception as e:
+        logger.warning(f"Error focusing browser window: {e}")
+    return False

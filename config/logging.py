@@ -1,8 +1,6 @@
 import os
 import logging
 from config.config import config
-from config.state import state_manager
-
 class StateLogHandler(logging.Handler):
     """
     Custom logging handler that intercepts logs and pipes them into
@@ -10,6 +8,7 @@ class StateLogHandler(logging.Handler):
     """
     def emit(self, record):
         try:
+            from config.state import state_manager
             log_entry = self.format(record)
             state_manager.add_tool_log(log_entry)
         except Exception:

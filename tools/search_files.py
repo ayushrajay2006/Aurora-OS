@@ -102,8 +102,11 @@ class SearchFilesTool(BaseTool):
                 "output": f"No files found matching '{query}'. (Scanned in {duration}s)"
             }
             
+        # Sort matches by modified time descending (newest first)
+        matches.sort(key=lambda x: x["last_modified"], reverse=True)
+            
         # Format output beautifully
-        output_lines = [f"Found {len(matches)} matching file(s) in {duration}s:\n"]
+        output_lines = [f"Found {len(matches)} matching file(s) in {duration}s (Sorted by newest first):\n"]
         for idx, match in enumerate(matches, 1):
             output_lines.append(f"{idx}. {match['filename']}")
             output_lines.append(f"   Path: {match['absolute_path']}")

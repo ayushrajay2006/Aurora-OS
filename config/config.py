@@ -3,7 +3,8 @@ import json
 
 DEFAULT_CONFIG = {
     "ollama_host": "http://localhost:11434",
-    "model_name": "qwen2.5:14b",
+    "model_name": "qwen2.5:7b",
+    "heavy_model": "qwen2.5:7b",
     "fallback_model": "qwen2.5:7b",
     "db_path": os.path.join("memory", "memory.db"),
     "logs_dir": "logs",
@@ -23,7 +24,13 @@ DEFAULT_CONFIG = {
     "llm_provider": "local",
     "local_vision_model": "llava",
     "gemini_api_key": "",
-    "gemini_model": "gemini-2.5-flash"
+    "gemini_model": "gemini-2.5-flash",
+    "openrouter_api_key": "",
+    "openrouter_text_model": "qwen/qwen3-235b-a22b:free",
+    "openrouter_vision_model": "qwen/qwen2.5-vl-72b-instruct:free",
+    "ws_bridge_enabled": False,
+    "ws_bridge_host": "localhost",
+    "ws_bridge_port": 8765
 }
 
 class Config:
@@ -64,6 +71,10 @@ class Config:
     @property
     def fallback_model(self) -> str:
         return self.get("fallback_model")
+
+    @property
+    def heavy_model(self) -> str:
+        return self.get("heavy_model")
 
     @property
     def db_path(self) -> str:
@@ -122,8 +133,32 @@ class Config:
         return self.get("gemini_model", "gemini-2.5-flash")
 
     @property
+    def openrouter_api_key(self) -> str:
+        return self.get("openrouter_api_key", "")
+
+    @property
+    def openrouter_text_model(self) -> str:
+        return self.get("openrouter_text_model", "qwen/qwen3-235b-a22b:free")
+
+    @property
+    def openrouter_vision_model(self) -> str:
+        return self.get("openrouter_vision_model", "qwen/qwen2.5-vl-72b-instruct:free")
+
+    @property
     def local_vision_model(self) -> str:
         return self.get("local_vision_model", "llava")
+
+    @property
+    def ws_bridge_enabled(self) -> bool:
+        return self.get("ws_bridge_enabled", False)
+
+    @property
+    def ws_bridge_host(self) -> str:
+        return self.get("ws_bridge_host", "localhost")
+
+    @property
+    def ws_bridge_port(self) -> int:
+        return int(self.get("ws_bridge_port", 8765))
 
 
 # Global config instance
