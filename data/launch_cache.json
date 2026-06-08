@@ -1,0 +1,14 @@
+{
+    "msedge.exe": {
+        "exe_name": "msedge.exe",
+        "pid": null
+    },
+    "c:\\program files (x86)\\steam\\steam.exe": {
+        "exe_name": "steam.exe",
+        "pid": null
+    },
+    "steam.exe": {
+        "exe_name": "steam.exe",
+        "pid": null
+    }
+}

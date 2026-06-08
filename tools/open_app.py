@@ -215,184 +215,74 @@ class OpenAppTool(BaseTool):
             resolved_path = app_name.lower().strip()
             
         try:
+            import psutil
+            import time
+            resolved_path_clean = resolved_path.strip('\"\'')
+            
+            exe_name = os.path.basename(resolved_path_clean).lower()
+            if not exe_name.endswith(".exe"):
+                exe_name += ".exe"
+                
+            pids_before = set(psutil.pids())
+            
             # Special case for Discord AppData Update launcher: needs arguments to boot properly
-            if "discord" in app_name.lower() and resolved_path.endswith("Update.exe"):
+            if "discord" in app_name.lower() and resolved_path_clean.endswith("Update.exe"):
                 # Discord Update.exe needs --processStart=Discord.exe
-                subprocess.Popen([resolved_path, "--processStart=Discord.exe"])
-                return {"success": True, "output": f"Successfully launched Discord using updater."}
-                
-            # Standard launching using os.startfile (safer, handles .lnk files natively)
-            if os.path.isabs(resolved_path):
-                os.startfile(resolved_path)
+                subprocess.Popen([resolved_path_clean, "--processStart=Discord.exe"], shell=False)
+                exe_name = "discord.exe"
             else:
-                # System utilities in PATH like cmd or calc
-                subprocess.Popen(resolved_path, shell=True)
+                os.startfile(resolved_path_clean)
                 
-            logger.info(f"Successfully launched: '{app_name}'")
+            # Wait a bit for process to spawn
+            time.sleep(1.5)
+            
+            pids_after = set(psutil.pids())
+            new_pids = pids_after - pids_before
+            
+            exe_running = False
+            for p in psutil.process_iter(['name']):
+                try:
+                    if p.info['name'] and p.info['name'].lower() == exe_name:
+                        exe_running = True
+                        break
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
+                    
+            if not new_pids and not exe_running:
+                msg = f"Failed to verify launch of '{app_name}'. No new processes or matching windows found."
+                logger.error(msg)
+                return {"success": False, "output": msg}
+                
+            # Store launch cache for close_app
+            import json
+            cache_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "launch_cache.json")
+            cache_data = {}
+            if os.path.exists(cache_file):
+                try:
+                    with open(cache_file, "r") as f:
+                        cache_data = json.load(f)
+                except Exception:
+                    pass
+            
+            cache_data[app_name.lower().strip()] = {
+                "exe_name": exe_name,
+                "pid": list(new_pids)[0] if new_pids else None
+            }
+            if exe_name:
+                cache_data[exe_name.lower().strip()] = cache_data[app_name.lower().strip()]
+                
+            try:
+                os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+                with open(cache_file, "w") as f:
+                    json.dump(cache_data, f, indent=4)
+            except Exception as e:
+                logger.warning(f"Failed to write launch_cache.json: {e}")
+                
+            logger.info(f"Successfully verified launch: '{app_name}'")
             return {"success": True, "output": f"Successfully opened '{app_name}'."}
         except Exception as e:
             msg = f"Failed to open '{app_name}': {e}"
             logger.error(msg)
             return {"success": False, "output": msg}
 
-def close_process_by_name(name: str) -> dict:
-    """Closes a process or application on Windows by name using taskkill with fuzzy and substring matching."""
-    name_clean = name.strip()
-    if not name_clean:
-        return {"success": False, "output": "Empty process name provided."}
 
-    # Gather potential executable names to terminate
-    targets = []
-    
-    # 1. Direct matching
-    targets.append(name_clean)
-    if not name_clean.lower().endswith(".exe"):
-        targets.append(f"{name_clean}.exe")
-        
-    # 2. Handle common hardcoded aliases
-    alias_map = {
-        "epic games launcher": "EpicGamesLauncher.exe",
-        "epicgameslauncher": "EpicGamesLauncher.exe",
-        "epic games": "EpicGamesLauncher.exe",
-        "epicgames": "EpicGamesLauncher.exe",
-        "epic": "EpicGamesLauncher.exe",
-        "chrome": "chrome.exe",
-        "discord": "Discord.exe",
-        "vs code": "Code.exe",
-        "vscode": "Code.exe",
-        "notepad": "notepad.exe",
-        "calculator": "calc.exe",
-        "task manager": "taskmgr.exe",
-        "taskmanager": "taskmgr.exe",
-        "taskmgr": "taskmgr.exe"
-    }
-    alias_key = name_clean.lower()
-    if alias_key in alias_map:
-        alias_target = alias_map[alias_key]
-        if alias_target not in targets:
-            targets.append(alias_target)
-
-    # 3. Dynamic running process scanning (substring and word-based matching)
-    try:
-        # Fetch all running processes using tasklist
-        res = subprocess.run(["tasklist", "/fo", "csv", "/nh"], capture_output=True, text=True, check=False)
-        if res.returncode == 0:
-            lines = res.stdout.strip().split("\n")
-            running_exes = []
-            for line in lines:
-                if not line.strip():
-                    continue
-                # Split CSV row: e.g. "taskhostw.exe","2468","Services","0","15,232 K"
-                parts = [p.strip('"') for p in line.split(",")]
-                if parts:
-                    exe_name = parts[0]
-                    if exe_name.lower().endswith(".exe") and exe_name not in running_exes:
-                        running_exes.append(exe_name)
-                        
-            # Fuzzy match running processes
-            cleaned_search = name_clean.lower().replace(" ", "")
-            search_words = [w.lower() for w in name_clean.split() if len(w) >= 3]
-            
-            for exe in running_exes:
-                exe_lower = exe.lower()
-                exe_no_ext = exe_lower.replace(".exe", "")
-                exe_clean = exe_no_ext.replace(" ", "").replace("_", "").replace("-", "")
-                
-                # Check 3.1: Search term (without spaces) is inside the process name (without spaces/extensions) or vice versa
-                if cleaned_search in exe_clean or exe_clean in cleaned_search:
-                    if exe not in targets:
-                        targets.append(exe)
-                        continue
-                        
-                # Check 3.2: Any search word of length >= 3 matches a running process name
-                for word in search_words:
-                    if word in exe_clean:
-                        if exe not in targets:
-                            targets.append(exe)
-                            break
-    except Exception as e:
-        logger.error(f"Failed to scan running processes: {e}")
-
-    # Remove duplicates but keep order
-    unique_targets = []
-    for t in targets:
-        if t not in unique_targets:
-            unique_targets.append(t)
-            
-    logger.info(f"Resolved process targets for '{name}': {unique_targets}")
-    
-    # Run taskkill for each target
-    success_count = 0
-    errors = []
-    
-    for target in unique_targets:
-        try:
-            # /f forces termination, /im specifies image name
-            res = subprocess.run(
-                ["taskkill", "/f", "/im", target],
-                capture_output=True,
-                text=True,
-                check=False
-            )
-            if res.returncode == 0:
-                success_count += 1
-                logger.info(f"Successfully closed process matching: '{target}'")
-            elif "Access is denied" in res.stderr:
-                errors.append(f"'{target}': Access was denied. This usually means the application (like Task Manager) is running with administrator/elevated privileges and requires Aurora's host terminal to be run as Administrator to terminate it.")
-            elif "not found" in res.stderr.lower():
-                # Process not running - only log if it's the direct user input name
-                if target.lower() == name_clean.lower() or target.lower() == f"{name_clean.lower()}.exe":
-                    errors.append(f"'{target}': Process not found or not running.")
-            else:
-                errors.append(f"'{target}': {res.stderr.strip()}")
-        except Exception as e:
-            errors.append(f"Failed to execute taskkill for '{target}': {e}")
-            
-    if success_count > 0:
-        return {
-            "success": True,
-            "output": f"Successfully closed running instances of '{name}'."
-        }
-    else:
-        # If nothing succeeded, return failure details
-        unique_errors = []
-        for err in errors:
-            if err not in unique_errors:
-                unique_errors.append(err)
-        err_msg = "; ".join(unique_errors) if unique_errors else "Process not found or not running."
-        return {
-            "success": False,
-            "output": f"Could not close '{name}': {err_msg}"
-        }
-
-@registry.register(
-    name="close_app",
-    description="Closes a running Windows application or process by name.",
-    args_schema={
-        "app_name": {
-            "type": "string",
-            "description": "Name of the application or process exactly as requested by the user. Do not guess or modify the name; pass the raw name as provided (e.g. 'Valorant Tracker', 'Chrome') so that the tool's internal fuzzy process scanner can resolve the correct executable dynamically."
-        }
-    },
-    risk_level="medium"
-)
-class CloseAppTool(BaseTool):
-    def execute(self, app_name: str) -> dict:
-        logger.info(f"Attempting to close application: '{app_name}'")
-        return close_process_by_name(app_name)
-
-@registry.register(
-    name="close_process",
-    description="Closes a running process by name.",
-    args_schema={
-        "process_name": {
-            "type": "string",
-            "description": "Name of the process or executable to close. If the user provided a generic application name rather than a specific filename, pass that name exactly as requested without guessing the executable filename or extension (e.g., 'Valorant Tracker') so the internal fuzzy scanner can resolve it dynamically."
-        }
-    },
-    risk_level="medium"
-)
-class CloseProcessTool(BaseTool):
-    def execute(self, process_name: str) -> dict:
-        logger.info(f"Attempting to close process: '{process_name}'")
-        return close_process_by_name(process_name)

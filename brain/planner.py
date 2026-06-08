@@ -77,8 +77,8 @@ class Planner:
         actions = []
         clean_text = response_text
         
-        # Regex to find JSON code blocks: ```json ... ```
-        pattern = re.compile(r"```json\s*(.*?)\s*```", re.DOTALL)
+        # Regex to find JSON code blocks: ```json ... ``` or ``` ... ```
+        pattern = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)
         matches = pattern.findall(response_text)
         
         for match in matches:
@@ -89,12 +89,35 @@ class Planner:
                 elif isinstance(parsed, dict):
                     actions.append(parsed)
                 # Remove the JSON block from the user-facing text
-                clean_text = clean_text.replace(f"```json{match}```", "")
-                clean_text = clean_text.replace(f"```json\n{match}\n```", "")
-                clean_text = clean_text.replace(f"```json\n{match}```", "")
+                # Try replacing with the code block format variations
+                for block_format in [
+                    f"```json\n{match}\n```", f"```json\n{match}```", f"```json{match}```",
+                    f"```\n{match}\n```", f"```\n{match}```", f"```{match}```"
+                ]:
+                    clean_text = clean_text.replace(block_format, "")
             except Exception as e:
                 logger.error(f"Failed to parse tool JSON block: {match}. Error: {e}")
                 
+        # Raw JSON fallback if no actions parsed from code blocks
+        if not actions:
+            for start_char, end_char in [('[', ']'), ('{', '}')]:
+                first_idx = response_text.find(start_char)
+                last_idx = response_text.rfind(end_char)
+                if first_idx != -1 and last_idx != -1 and last_idx > first_idx:
+                    candidate = response_text[first_idx:last_idx+1]
+                    try:
+                        parsed = json.loads(candidate.strip())
+                        if isinstance(parsed, list) and start_char == '[':
+                            actions = parsed
+                            clean_text = response_text[:first_idx] + response_text[last_idx+1:]
+                            break
+                        elif isinstance(parsed, dict) and start_char == '{':
+                            actions = [parsed]
+                            clean_text = response_text[:first_idx] + response_text[last_idx+1:]
+                            break
+                    except Exception:
+                        pass
+
         # Clean up any trailing whitespace or empty lines
         clean_text = clean_text.strip()
         return clean_text, actions

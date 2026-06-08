@@ -73,15 +73,18 @@ class SearchFilesTool(BaseTool):
                             try:
                                 stats = os.stat(full_path)
                                 size_kb = round(stats.st_size / 1024, 2)
-                                mod_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(stats.st_mtime))
+                                mtime = stats.st_mtime
+                                mod_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mtime))
                             except Exception:
                                 size_kb = 0.0
+                                mtime = 0.0
                                 mod_time = "Unknown"
                                 
                             matches.append({
                                 "filename": file,
                                 "absolute_path": full_path,
                                 "size_kb": size_kb,
+                                "mtime": mtime,
                                 "last_modified": mod_time
                             })
                             

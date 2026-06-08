@@ -1,6 +1,8 @@
 import sys
 import os
 import time
+import re
+from typing import Optional, List, Dict, Any
 from config.config import config
 from config.logging import logger
 from config.state import state_manager
@@ -9,6 +11,9 @@ from brain.planner import planner, SYSTEM_PROMPT_TEMPLATE
 from memory.memory import memory
 # Ensure tools are imported so they register themselves
 import tools.open_app
+import tools.open_file
+import tools.open_folder
+import tools.close_app
 import tools.open_website
 import tools.search_files
 import tools.read_pdf
@@ -63,6 +68,121 @@ def verify_ollama_setup() -> bool:
     state_manager.update_state(status="Online", model_name=model_name)
     return True
 
+def check_deterministic_memory_retrieval(user_input: str) -> Optional[str]:
+    query_clean = user_input.lower().strip()
+    
+    # If the user is trying to store a memory, do NOT intercept.
+    storage_phrases = ["remember that", "remember my", "save that", "save my", "store that", "store my", "set my", "remember to"]
+    if any(phrase in query_clean for phrase in storage_phrases):
+        return None
+        
+    # Check if this is a question/retrieval
+    retrieval_indicators = ["what", "where", "who", "when", "tell", "show", "recall", "get", "retrieve", "know", "?", "project folder", "my project"]
+    if not any(indicator in query_clean for indicator in retrieval_indicators):
+        return None
+        
+    from memory.memory import memory
+    facts = memory.get_all_facts()
+    if not facts:
+        return None
+        
+    best_match_key = None
+    best_match_value = None
+    
+    for key, value in facts.items():
+        # Split key by underscore
+        key_words = key.lower().split('_')
+        # Check if all words of the key are present in the query
+        if all(word in query_clean for word in key_words):
+            if best_match_key is None or len(key) > len(best_match_key):
+                best_match_key = key
+                best_match_value = value
+                
+    if best_match_key:
+        display_key = best_match_key.replace('_', ' ')
+        display_key = display_key[0].upper() + display_key[1:]
+        return f"{display_key} is {best_match_value}."
+        
+    return None
+
+def rank_search_results(matches: list, query: str) -> list:
+    query_clean = query.lower().strip()
+    keywords = [k for k in query_clean.split() if k]
+    
+    ranked = []
+    for m in matches:
+        filename = m["filename"].lower()
+        name_no_ext = os.path.splitext(filename)[0]
+        
+        score = 0
+        if name_no_ext == query_clean:
+            score += 500
+        if query_clean in filename:
+            score += 100
+        for kw in keywords:
+            if kw in filename:
+                score += 10
+                
+        ranked.append((score, m.get("mtime", 0.0), m))
+        
+    ranked.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    return [item[2] for item in ranked]
+
+def handle_search_continuation(matches: list, query: str):
+    num_results = len(matches)
+    if num_results == 0:
+        return
+        
+    if num_results == 1:
+        match = matches[0]
+        print(f"\n     [?] Found 1 match: '{match['filename']}'. Would you like to open it? (y/N): ", end="", flush=True)
+        user_choice = input().strip().lower()
+        if user_choice in ["y", "yes"]:
+            print(f"     [*] Executing 'open_file' for '{match['absolute_path']}'...")
+            open_res = registry.execute_tool("open_file", {"path": match["absolute_path"]})
+            print(f"     [Result] Success={open_res.get('success')} | Output='{open_res.get('output')}'")
+            
+    elif 2 <= num_results <= 5:
+        print(f"\n     [?] Found {num_results} matches. Which one would you like to open?")
+        for idx, match in enumerate(matches, 1):
+            print(f"       {idx}. {match['filename']} ({match['absolute_path']})")
+        print("       Enter number to open (or press Enter to skip): ", end="", flush=True)
+        user_input = input().strip()
+        if user_input.isdigit():
+            idx = int(user_input) - 1
+            if 0 <= idx < num_results:
+                match = matches[idx]
+                print(f"     [*] Executing 'open_file' for '{match['absolute_path']}'...")
+                open_res = registry.execute_tool("open_file", {"path": match["absolute_path"]})
+                print(f"     [Result] Success={open_res.get('success')} | Output='{open_res.get('output')}'")
+                
+    else:
+        ranked_matches = rank_search_results(matches, query)
+        print(f"\n     [?] Found {num_results} matches (ranked by relevance and modification date).")
+        print("     Showing top 5 matches. Which one would you like to open?")
+        display_count = min(5, len(ranked_matches))
+        for idx in range(display_count):
+            match = ranked_matches[idx]
+            print(f"       {idx + 1}. {match['filename']} ({match['absolute_path']})")
+        print("       Enter number to open (or press Enter to skip): ", end="", flush=True)
+        user_input = input().strip()
+        if user_input.isdigit():
+            idx = int(user_input) - 1
+            if 0 <= idx < display_count:
+                match = ranked_matches[idx]
+                print(f"     [*] Executing 'open_file' for '{match['absolute_path']}'...")
+                open_res = registry.execute_tool("open_file", {"path": match["absolute_path"]})
+                print(f"     [Result] Success={open_res.get('success')} | Output='{open_res.get('output')}'")
+
+def sanitize_assistant_reply(text: str) -> str:
+    # Remove any markdown code blocks
+    text_clean = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+    # Remove any leftover ticks
+    text_clean = text_clean.replace("```", "")
+    # Clean up double newlines
+    text_clean = re.sub(r"\n{3,}", "\n\n", text_clean)
+    return text_clean.strip()
+
 def run_chat_loop():
     print("\n[+] Aurora is fully operational!")
     print("Type your message to chat, or type 'exit' or 'quit' to close.")
@@ -74,6 +194,8 @@ def run_chat_loop():
     for r in history_records:
         chat_history.append({"role": r["role"], "content": r["content"]})
         
+    from typing import Optional
+
     while True:
         try:
             user_input = input("\nUser > ").strip()
@@ -87,6 +209,61 @@ def run_chat_loop():
             memory.save_message("user", user_input)
             state_manager.add_message("user", user_input)
             
+            # Check for deterministic memory retrieval first
+            memory_answer = check_deterministic_memory_retrieval(user_input)
+            if memory_answer:
+                print(f"Aurora > {memory_answer}")
+                memory.save_message("assistant", memory_answer)
+                state_manager.add_message("assistant", memory_answer)
+                chat_history.append({"role": "user", "content": user_input})
+                chat_history.append({"role": "assistant", "content": memory_answer})
+                if len(chat_history) > 30:
+                    chat_history = chat_history[-30:]
+                continue
+                
+            # Intercept pending search context continuation
+            import urllib.parse
+            import webbrowser
+            global pending_search_context
+            if 'pending_search_context' not in globals():
+                pending_search_context = None
+                
+            if pending_search_context:
+                site = pending_search_context
+                query = urllib.parse.quote(user_input.strip())
+                pending_search_context = None
+                
+                urls = {
+                    "youtube": f"https://www.youtube.com/results?search_query={query}",
+                    "google": f"https://www.google.com/search?q={query}",
+                    "gmail": f"https://mail.google.com/mail/u/0/#search/{query}",
+                    "github": f"https://github.com/search?q={query}",
+                    "reddit": f"https://www.reddit.com/search/?q={query}",
+                    "wikipedia": f"https://en.wikipedia.org/wiki/Special:Search?search={query}"
+                }
+                
+                target_url = urls.get(site, f"https://www.google.com/search?q={query}")
+                print(f"Aurora > Opening {site} search for '{user_input}'...")
+                try:
+                    webbrowser.open(target_url)
+                except Exception as e:
+                    logger.error(f"Failed to open browser: {e}")
+                    
+                chat_history.append({"role": "user", "content": user_input})
+                chat_history.append({"role": "assistant", "content": f"Opening {site} search for '{user_input}'."})
+                continue
+                
+            # Check for initial search context start
+            if user_input.lower().startswith("search "):
+                site = user_input[7:].strip().lower()
+                if site in ["youtube", "google", "gmail", "github", "reddit", "wikipedia"]:
+                    pending_search_context = site
+                    reply = f"What would you like to search on {site.capitalize()}?"
+                    print(f"Aurora > {reply}")
+                    chat_history.append({"role": "user", "content": user_input})
+                    chat_history.append({"role": "assistant", "content": reply})
+                    continue
+
             print("Aurora > ", end="", flush=True)
             state_manager.update_state(status="Thinking")
             
@@ -157,13 +334,15 @@ def run_chat_loop():
             # Parse the full text for actions
             reply, actions = planner.parse_response(full_text)
             
+            reply_sanitized = sanitize_assistant_reply(reply)
+            
             # Save to memory and state
-            memory.save_message("assistant", reply)
-            state_manager.add_message("assistant", reply)
+            memory.save_message("assistant", reply_sanitized)
+            state_manager.add_message("assistant", reply_sanitized)
             
             # Keep history buffer capped
             chat_history.append({"role": "user", "content": user_input})
-            chat_history.append({"role": "assistant", "content": reply})
+            chat_history.append({"role": "assistant", "content": reply_sanitized})
             if len(chat_history) > 30:
                 chat_history = chat_history[-30:]
                 
@@ -178,7 +357,11 @@ def run_chat_loop():
                     if not tool_name or str(tool_name).lower() in ["none", "null"]:
                         continue
                         
-                    print(f"  {idx}. Tool: '{tool_name}' | Arguments: {args}")
+                    # Hook Entity Resolution Layer
+                    from brain.entity_resolver import entity_resolver
+                    tool_name, args = entity_resolver.resolve_entities_before_execution(tool_name, args)
+                    
+                    print(f"  {idx}. Resolved Action: '{tool_name}' | Arguments: {args}")
                     
                     # Log planned tool call
                     action_id = f"act_{int(time.time())}_{idx}"
@@ -211,6 +394,11 @@ def run_chat_loop():
                     res = registry.execute_tool(tool_name, args)
                     print(f"     [Result] Success={res.get('success')} | Output='{res.get('output')}'")
                     memory.update_action(action_id, "success" if res.get("success") else "failed", res)
+                    
+                    if tool_name == "search_files" and res.get("success"):
+                        matches = res.get("data", {}).get("matches", [])
+                        if matches:
+                            handle_search_continuation(matches, args.get("query", ""))
                     
             state_manager.update_state(status="Online")
             
