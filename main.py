@@ -18,12 +18,14 @@ import tools.open_website
 import tools.search_files
 import tools.read_pdf
 import tools.memory_control
+import tools.discover_apps
+import tools.control_app
 from tools.registry import registry
 
 def print_banner():
     banner = """
 +-----------------------------------------+
-|           AURORA V1 - FOUNDATION        |
+|           AURORA V2 - FOUNDATION        |
 +-----------------------------------------+
 | Status: Starting                        |
 | Memory: Active                          |
@@ -264,6 +266,37 @@ def run_chat_loop():
                     chat_history.append({"role": "assistant", "content": reply})
                     continue
 
+            # Deterministic direct tool execution for exact no-arg diagnostics.
+            # Deterministic direct tool execution for application discovery.
+            command = user_input.lower().strip()
+
+            if command in [
+                "discover_apps",
+                "discover apps",
+                "list apps",
+                "list installed apps",
+                "what apps are installed",
+                "what games are installed",
+            ]:
+                print("Aurora > Running application discovery audit...")
+
+                res = registry.execute_tool("discover_apps", {})
+
+                output = res.get("output", "")
+
+                print(output)
+
+                memory.save_message("assistant", output)
+                state_manager.add_message("assistant", output)
+
+                chat_history.append({"role": "user", "content": user_input})
+                chat_history.append({"role": "assistant", "content": output})
+
+                if len(chat_history) > 30:
+                    chat_history = chat_history[-30:]
+
+                continue
+
             print("Aurora > ", end="", flush=True)
             state_manager.update_state(status="Thinking")
             
@@ -350,11 +383,21 @@ def run_chat_loop():
                 print("\nPlanned Actions:")
                 state_manager.set_planned_actions(actions)
                 for idx, act in enumerate(actions, 1):
-                    tool_name = act.get("tool")
-                    args = act.get("args", {})
+                    tool_name = act.get("tool_name") or act.get("tool")
+                    args = act.get("arguments") or act.get("args") or {}
+                    
+                    if not tool_name:
+                        logger.error(f"Execution failed: Tool name missing from action: {act}")
+                        print(f"     [!] Invalid schema: Action missing tool name. Action object: {act}")
+                        continue
+                        
+                    print(f"\n[SCHEMA]")
+                    print(f"Received Action: {act}")
+                    print(f"Resolved Tool: {tool_name}")
+                    print(f"Resolved Arguments: {args}\n")
                     
                     # Ignore dummy/conversational None action blocks
-                    if not tool_name or str(tool_name).lower() in ["none", "null"]:
+                    if str(tool_name).lower() in ["none", "null"]:
                         continue
                         
                     # Hook Entity Resolution Layer
@@ -413,6 +456,10 @@ def main():
     print_banner()
     logger.info("Starting Aurora...")
     
+    print("Registered Tools:")
+    for t_name in sorted(registry.get_all_tools().keys()):
+        print(f" - {t_name}")
+        
     if not verify_ollama_setup():
         sys.exit(1)
         
