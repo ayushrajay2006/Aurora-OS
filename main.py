@@ -20,6 +20,7 @@ import tools.read_pdf
 import tools.memory_control
 import tools.discover_apps
 import tools.control_app
+import tools.analyze_screen
 from tools.registry import registry
 
 def print_banner():
@@ -307,65 +308,73 @@ def run_chat_loop():
             else:
                 memories_text = "No long-term memories stored yet."
 
-            # Construct the prompts dynamically
-            tools_schema = planner._get_tools_schema_text()
-            system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
-                tools_schema_text=tools_schema,
-                memories_text=memories_text
-            )
+            is_action_request = planner._looks_like_action_request(user_input)
             
-            messages = [{"role": "system", "content": system_prompt}]
-            messages.extend(chat_history)
-            messages.append({"role": "user", "content": user_input})
-            
-            # Real-time token streaming with backtick-buffering filter
-            full_text = ""
-            buffer = ""
-            json_started = False
-            
-            try:
-                stream = llm_client.chat(messages, stream=True)
-                for chunk in stream:
-                    full_text += chunk
-                    if json_started:
-                        continue
-                        
-                    buffer += chunk
-                    if "```json" in buffer:
-                        json_started = True
-                        parts = buffer.split("```json")
-                        sys.stdout.write(parts[0])
-                        sys.stdout.flush()
-                        buffer = ""
-                    elif buffer.startswith("`") or "`" in buffer:
-                        if len(buffer) < 7:
+            if is_action_request:
+                # Use robust non-streaming planner with truthfulness enforcement
+                reply, actions = planner.create_plan(user_input, chat_history)
+                print(reply)
+            else:
+                # Use real-time streaming for conversational requests
+                # Construct the prompts dynamically
+                tools_schema = planner._get_tools_schema_text()
+                system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+                    tools_schema_text=tools_schema,
+                    memories_text=memories_text
+                )
+                
+                messages = [{"role": "system", "content": system_prompt}]
+                messages.extend(chat_history)
+                messages.append({"role": "user", "content": user_input})
+                
+                # Real-time token streaming with backtick-buffering filter
+                full_text = ""
+                buffer = ""
+                json_started = False
+                
+                try:
+                    stream = llm_client.chat(messages, stream=True)
+                    for chunk in stream:
+                        full_text += chunk
+                        if json_started:
                             continue
+                            
+                        buffer += chunk
+                        if "```json" in buffer:
+                            json_started = True
+                            parts = buffer.split("```json")
+                            sys.stdout.write(parts[0])
+                            sys.stdout.flush()
+                            buffer = ""
+                        elif buffer.startswith("`") or "`" in buffer:
+                            if len(buffer) < 7:
+                                continue
+                            else:
+                                if not "```json".startswith(buffer[:len(buffer)]):
+                                    sys.stdout.write(buffer)
+                                    sys.stdout.flush()
+                                    buffer = ""
                         else:
-                            if not "```json".startswith(buffer[:len(buffer)]):
-                                sys.stdout.write(buffer)
-                                sys.stdout.flush()
-                                buffer = ""
-                    else:
+                            sys.stdout.write(buffer)
+                            sys.stdout.flush()
+                            buffer = ""
+                            
+                    # Flush any remaining buffer if json wasn't started
+                    if buffer and not json_started:
                         sys.stdout.write(buffer)
                         sys.stdout.flush()
-                        buffer = ""
-                        
-                # Flush any remaining buffer if json wasn't started
-                if buffer and not json_started:
-                    sys.stdout.write(buffer)
-                    sys.stdout.flush()
-                
-                # Print newline to end the Aurora response line neatly
-                print()
-                
-            except Exception as e:
-                print() # clear line
-                logger.error(f"Ollama streaming chat failed: {e}", exc_info=True)
-                print(f"Aurora > Error communicating with LLM service: {e}")
-                continue
-                
-            # Parse the full text for actions
-            reply, actions = planner.parse_response(full_text)
+                    
+                    # Print newline to end the Aurora response line neatly
+                    print()
+                    
+                except Exception as e:
+                    print() # clear line
+                    logger.error(f"Ollama streaming chat failed: {e}", exc_info=True)
+                    print(f"Aurora > Error communicating with LLM service: {e}")
+                    continue
+                    
+                # Parse the full text for actions
+                reply, actions = planner.parse_response(full_text)
             
             reply_sanitized = sanitize_assistant_reply(reply)
             

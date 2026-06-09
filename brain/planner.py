@@ -8,8 +8,9 @@ from config.logging import logger
 # Keywords that signal an action intent requiring a tool call
 ACTION_INTENT_PHRASES = [
     "open ", "launch ", "start ", "run ", "close ", "quit ", "kill ",
-    "minimize ", "maximise ", "maximize ", "restore ", "switch to ",
-    "show ", "hide "
+    "minimize ", "minimise ", "maximise ", "maximize ", "restore ", "switch ", "switch to ",
+    "show ", "hide ", "find ", "search ", "focus ",
+    "what ", "read ", "describe ", "analyze "
 ]
 
 SYSTEM_PROMPT_TEMPLATE = """You are Aurora, an advanced, local-first personal operating system assistant for Windows, inspired by the beauty and intelligence of the Aurora Borealis.
@@ -32,6 +33,7 @@ Available Tools:
 Execution Rules:
 1. Identify if the user's intent requires running any of the available tools.
 2. If tools are required, write a markdown JSON code block containing an array of tool calls.
+3. Always provide a short, friendly conversational reply (like "Opening Notepad!") BEFORE writing the JSON block. Never output only the JSON block.
 Example response structure when calling tools:
 Let me open Notepad for you.
 ```json
@@ -55,7 +57,7 @@ Let me open Notepad for you.
    - Plan the appropriate tool (e.g., `summarize_file`, `read_file`, or `open_app`) directly using that resolved absolute path. Do not re-run the search tool.
 6. If no tools are required, simply reply conversationally. Do not include any JSON blocks.
 7. Always be direct, precise, and transparent about what actions you are planning.
-8. **Opening Applications or Games**: To open any application, game, or program use ONLY `open_app` with the app name. NEVER describe opening an app without generating this tool call.
+8. **Opening Applications or Games**: To open any application, game, or program use ONLY `open_app` with the app name. NEVER describe opening an app without generating this tool call. ALWAYS include a conversational confirmation BEFORE the JSON.
    Example: User says "open discord" → you MUST output:
    Opening Discord!
    ```json
@@ -214,8 +216,8 @@ class Planner:
                 replan_reminder = (
                     f"{user_prompt}\n\n"
                     "[SYSTEM REMINDER] Your previous response did not include a tool call JSON block. "
-                    "This request REQUIRES a tool call. You MUST respond with a ```json [...] ``` block. "
-                    "Do not describe the action in text only. Generate the tool call now."
+                    "This request REQUIRES a tool call. You MUST respond with a friendly conversational preamble, "
+                    "followed immediately by the ```json [...] ``` block. Generate both now."
                 )
                 replan_messages = [{"role": "system", "content": system_prompt}]
                 replan_messages.extend(history)

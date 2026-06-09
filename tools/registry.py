@@ -80,6 +80,10 @@ class ToolRegistry:
     def list_tools(self) -> List[BaseTool]:
         return list(self._tools.values())
 
+    def get_all_tools(self) -> Dict[str, BaseTool]:
+        """Backward-compatible accessor for startup diagnostics."""
+        return dict(self._tools)
+
     def get_tool_schemas(self) -> List[Dict[str, Any]]:
         return [tool.get_schema() for tool in self.list_tools()]
 

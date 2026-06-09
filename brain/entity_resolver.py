@@ -71,8 +71,35 @@ class EntityResolver:
     def resolve_entities_before_execution(self, tool_name: str, args: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         resolved_args = args.copy()
         
+        # Desktop context pronoun resolution hook
+        from brain.desktop_context import desktop_context
+        
+        target_field = None
+        if tool_name in ["open_app", "switch_to_app", "minimize_app", "maximize_app", "restore_app", "close_app"]:
+            target_field = "app_name"
+        elif tool_name == "close_process":
+            target_field = "process_name"
+            
+        if target_field and target_field in resolved_args:
+            raw_target = resolved_args[target_field]
+            if raw_target:
+                resolution = desktop_context.resolve_reference(raw_target)
+                if resolution.get("error"):
+                    # Return the exact structured clarification object requested
+                    return "ask_clarification", {
+                        "success": False, 
+                        "requires_clarification": True, 
+                        "output": resolution.get("clarification", "Ambiguous reference.")
+                    }
+                else:
+                    resolved_args[target_field] = resolution["resolved"]
+                    
+        # Refresh the variable in case it was resolved
+        if target_field and target_field in resolved_args:
+            raw_target = resolved_args[target_field]
+        
         if tool_name == "open_app":
-            app_name = args.get("app_name", "").strip()
+            app_name = resolved_args.get("app_name", "").strip()
             folder_path = self.get_folder_path(app_name)
             if folder_path or os.path.isdir(app_name):
                 tool_name = "open_folder"
@@ -105,19 +132,19 @@ class EntityResolver:
                         resolved_args["app_name"] = resolved_path
                     
         elif tool_name == "open_folder":
-            path = args.get("path", "").strip()
+            path = resolved_args.get("path", "").strip()
             folder_path = self.get_folder_path(path)
             if folder_path:
                 resolved_args["path"] = folder_path
 
         elif tool_name == "open_file":
-            path = args.get("path", "").strip()
+            path = resolved_args.get("path", "").strip()
             file_path = self.resolve_file_entity(path)
             if file_path:
                 resolved_args["path"] = file_path
 
         elif tool_name in ["close_app", "close_process", "switch_to_app", "minimize_app", "maximize_app", "restore_app"]:
-            target_name = args.get("app_name") or args.get("process_name", "")
+            target_name = resolved_args.get("app_name") or resolved_args.get("process_name", "")
             from brain.app_resolver import app_resolver
             resolved_path = app_resolver.resolve_app(target_name)
             if resolved_path:

@@ -36,8 +36,24 @@ class OpenFolderTool(BaseTool):
         # 0. Check if it's already an absolute path
         if os.path.isabs(path_clean) and os.path.exists(path_clean) and os.path.isdir(path_clean):
             resolved_path = os.path.abspath(path_clean)
-            logger.info(f"Absolute path provided and exists. Skipping discovery. Selected:\n{resolved_path}")
-            return {"success": True, "output": f"Successfully opened folder: '{resolved_path}'"}
+
+            try:
+                os.startfile(resolved_path)
+
+                logger.info(
+                    f"Absolute path provided and exists. Opened:\n{resolved_path}"
+                )
+
+                return {
+                    "success": True,
+                    "output": f"Successfully opened folder: '{resolved_path}'"
+                }
+
+            except Exception as e:
+                return {
+                    "success": False,
+            "output": f"Failed to open folder: {e}"
+        }
             
         base_name = path_lower[:-7].strip() if path_lower.endswith(" folder") else path_lower
         
@@ -49,13 +65,21 @@ class OpenFolderTool(BaseTool):
             scan_roots = [
                 os.path.join(user_profile, "Downloads"),
                 os.path.join(user_profile, "Documents"),
-                os.path.join(user_profile, "Desktop")
+                os.path.join(user_profile, "Desktop"),
+                "D:\\"
             ]
             
             # Check for OneDrive
             onedrive_path = os.path.join(user_profile, "OneDrive")
             if os.path.exists(onedrive_path):
                 scan_roots.append(onedrive_path)
+                
+            IGNORE_DIRS = {
+                "appdata", ".git", ".venv", "venv", "node_modules", 
+                "__pycache__", ".idea", ".vscode", "local settings",
+                "overwolf", "steamlibrary", "epicgames",
+                "program files", "program files (x86)", "windows", "system32"
+            }
                 
             from rapidfuzz import fuzz
             
@@ -70,6 +94,9 @@ class OpenFolderTool(BaseTool):
                     continue
                 try:
                     for root, dirs, files in os.walk(root_dir):
+                        # Filter out ignored directories to prevent walking them
+                        dirs[:] = [d for d in dirs if d.lower() not in IGNORE_DIRS]
+                        
                         depth = root.replace(root_dir, "").count(os.sep)
                         if depth > 2:
                             dirs.clear()
@@ -125,11 +152,23 @@ class OpenFolderTool(BaseTool):
                 if top_score >= 90 or (top_score >= 80 and runner_up <= 50):
                     resolved_path = candidates[0][0]
                 else:
-                    logger.info("Ambiguous results. Presenting choices.")
-                    msg = "Found multiple matching folders. Please specify which one you meant:\n"
+                    logger.info("Ambiguous results. Presenting choices interactively.")
+                    print(f"     [?] Found {len(candidates)} matching folders. Please specify which one you meant:")
                     for idx, (upath, uscore) in enumerate(candidates[:5], 1):
-                        msg += f"{idx}. {upath} (Score: {uscore})\n"
-                    return {"success": False, "output": msg}
+                        print(f"       {idx}. {upath} (Score: {uscore})")
+                    
+                    try:
+                        choice = input("     Enter number to open (or press Enter to cancel): ").strip()
+                        if not choice:
+                            return {"success": False, "output": "User cancelled folder selection."}
+                        
+                        choice_idx = int(choice) - 1
+                        if 0 <= choice_idx < len(candidates[:5]):
+                            resolved_path = candidates[choice_idx][0]
+                        else:
+                            return {"success": False, "output": "Invalid selection. Folder opening cancelled."}
+                    except ValueError:
+                        return {"success": False, "output": "Invalid input. Must be a number."}
             
         resolved_path = os.path.abspath(resolved_path)
         logger.info(f"Selected:\n{resolved_path}")
