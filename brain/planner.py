@@ -5,6 +5,13 @@ from tools.registry import registry
 from brain.llm import llm_client
 from config.logging import logger
 
+# Keywords that signal an action intent requiring a tool call
+ACTION_INTENT_PHRASES = [
+    "open ", "launch ", "start ", "run ", "close ", "quit ", "kill ",
+    "minimize ", "maximise ", "maximize ", "restore ", "switch to ",
+    "show ", "hide "
+]
+
 SYSTEM_PROMPT_TEMPLATE = """You are Aurora, an advanced, local-first personal operating system assistant for Windows, inspired by the beauty and intelligence of the Aurora Borealis.
 
 Your goal is to help the user control their PC, manage files, open applications, search the web, and answer questions.
@@ -48,14 +55,56 @@ Let me open Notepad for you.
    - Plan the appropriate tool (e.g., `summarize_file`, `read_file`, or `open_app`) directly using that resolved absolute path. Do not re-run the search tool.
 6. If no tools are required, simply reply conversationally. Do not include any JSON blocks.
 7. Always be direct, precise, and transparent about what actions you are planning.
-8. To open specific Windows system folders or directories (such as the Recycle Bin, Downloads, Documents, Control Panel, or This PC), always call the `open_app` tool with the name of the folder itself as the argument (e.g. `open_app(app_name='downloads')` or `open_app(app_name='recycle bin')`), NOT just 'explorer'.
-9. **Proactive Memory Recording**: You must be proactive in recording key personal facts, preferences, and system settings (such as the user's name, age, birthday, favorite games, or custom folder paths). However, do NOT record casual chit-chat, temporary statuses (e.g., playing a game "recently"), or fleeting conversational comments. Only save facts that have long-term utility for personalizing system actions. Do not call 'remember_fact' if the key-value pair is already listed in the 'Stored Long-Term Memories & Preferences' section, unless the value has changed.
-10. **Preventing Technical Hallucinations (Search Rule)**: You must never guess or hallucinate specific complex formulas, Rubik's cube algorithms (e.g., CFOP PLL/OLL algorithms), scientific constants, or detailed technical references that you do not have stored in your long-term memories or local files. If the user asks for such technical information, you MUST NOT generate them from memory. Instead, call the `open_website` tool with a descriptive search query (e.g., `open_website(url="standard CFOP PLL algorithms sheet")`) to perform a Google search on the user's browser, ensuring they receive accurate information.
+8. **Opening Applications or Games**: To open any application, game, or program use ONLY `open_app` with the app name. NEVER describe opening an app without generating this tool call.
+   Example: User says "open discord" → you MUST output:
+   Opening Discord!
+   ```json
+   [{"tool": "open_app", "args": {"app_name": "discord"}}]
+   ```
+9. **Opening Folders**: To open any folder or directory (Downloads, Documents, Desktop, Pictures, Videos, Music, Screenshots, or any named folder) use ONLY `open_folder` with the folder name or path. NEVER use `open_app` for folders. NEVER describe opening a folder without generating this tool call.
+   Example: User says "open downloads" → you MUST output:
+   Opening your Downloads folder!
+   ```json
+   [{"tool": "open_folder", "args": {"path": "downloads"}}]
+   ```
+10. **Closing Applications**: To close any running application use ONLY `close_app` with the app name. NEVER say you have closed an app without generating this tool call. NEVER describe closing without calling the tool.
+    Example: User says "close steam" → you MUST output:
+    Closing Steam!
+    ```json
+    [{"tool": "close_app", "args": {"app_name": "steam"}}]
+    ```
+11. **Window Control**: To minimize, maximize, restore, or switch to a window use `minimize_app`, `maximize_app`, `restore_app`, or `switch_to_app`. NEVER describe a window action without calling the appropriate tool.
+    Example: User says "minimize discord" → `minimize_app(app_name='discord')`
+12. **Proactive Memory Recording**: You must be proactive in recording key personal facts, preferences, and system settings (such as the user's name, age, birthday, favorite games, or custom folder paths). However, do NOT record casual chit-chat, temporary statuses (e.g., playing a game "recently"), or fleeting conversational comments. Only save facts that have long-term utility for personalizing system actions. Do not call 'remember_fact' if the key-value pair is already listed in the 'Stored Long-Term Memories & Preferences' section, unless the value has changed.
+13. **Preventing Technical Hallucinations (Search Rule)**: You must never guess or hallucinate specific complex formulas, Rubik's cube algorithms (e.g., CFOP PLL/OLL algorithms), scientific constants, or detailed technical references that you do not have stored in your long-term memories or local files. If the user asks for such technical information, you MUST NOT generate them from memory. Instead, call the `open_website` tool with a descriptive search query (e.g., `open_website(url="standard CFOP PLL algorithms sheet")`) to perform a Google search on the user's browser, ensuring they receive accurate information.
 """
+
+# Tool names that represent real system actions (not conversational)
+ACTION_TOOLS = {
+    "open_app", "open_folder", "open_file", "open_website",
+    "close_app", "close_process",
+    "switch_to_app", "minimize_app", "maximize_app", "restore_app",
+    "search_files", "read_pdf", "remember_fact", "forget_fact", "discover_apps",
+}
 
 class Planner:
     def __init__(self):
         pass
+
+    def _looks_like_action_request(self, user_input: str) -> bool:
+        """Returns True if the user's message looks like a system action request."""
+        q = user_input.lower().strip()
+        for phrase in ACTION_INTENT_PHRASES:
+            if q.startswith(phrase) or f" {phrase.strip()} " in q:
+                return True
+        return False
+
+    def _response_has_action_tool(self, actions: list) -> bool:
+        """Returns True if the parsed actions contain at least one real action tool."""
+        for act in actions:
+            if act.get("tool") in ACTION_TOOLS:
+                return True
+        return False
 
     def _get_tools_schema_text(self) -> str:
         schemas = registry.get_tool_schemas()
@@ -126,6 +175,8 @@ class Planner:
         """
         Generates a plan from user prompt, querying Ollama.
         Returns conversational reply and parsed planned actions list.
+        If an action intent is detected but no tool call is produced, replans once
+        with an explicit reminder injected into the message.
         """
         from memory.memory import memory
         all_facts = memory.get_all_facts()
@@ -139,19 +190,46 @@ class Planner:
             tools_schema_text=tools_schema,
             memories_text=memories_text
         )
-        
+
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend(history)
         messages.append({"role": "user", "content": user_prompt})
-        
+
         logger.info(f"Generating plan for prompt: '{user_prompt}'")
         try:
             raw_response = llm_client.chat(messages, stream=False)
             logger.debug(f"Raw LLM response: {raw_response}")
-            
+
             conversational_text, actions = self.parse_response(raw_response)
             logger.info(f"Parsed conversational reply: '{conversational_text}'")
             logger.info(f"Parsed actions: {actions}")
+
+            # --- Replan if action intent detected but no tool call produced ---
+            if self._looks_like_action_request(user_prompt) and not self._response_has_action_tool(actions):
+                logger.warning(
+                    f"[Planner] Action intent detected for '{user_prompt}' but NO tool call was generated. "
+                    "Replanning with explicit reminder."
+                )
+                replan_reminder = (
+                    f"{user_prompt}\n\n"
+                    "[SYSTEM REMINDER] Your previous response did not include a tool call JSON block. "
+                    "This request REQUIRES a tool call. You MUST respond with a ```json [...] ``` block. "
+                    "Do not describe the action in text only. Generate the tool call now."
+                )
+                replan_messages = [{"role": "system", "content": system_prompt}]
+                replan_messages.extend(history)
+                replan_messages.append({"role": "user", "content": replan_reminder})
+
+                raw_response2 = llm_client.chat(replan_messages, stream=False)
+                logger.debug(f"[Planner] Replan raw response: {raw_response2}")
+                conversational_text2, actions2 = self.parse_response(raw_response2)
+
+                if self._response_has_action_tool(actions2):
+                    logger.info(f"[Planner] Replan succeeded — tool calls: {actions2}")
+                    return conversational_text2, actions2
+                else:
+                    logger.warning("[Planner] Replan also produced no tool calls. Returning original response.")
+
             return conversational_text, actions
         except Exception as e:
             logger.error(f"Planner failed to generate plan: {e}")

@@ -42,12 +42,20 @@ def terminate_process_tree(exe_name: str, pid: Optional[int] = None) -> dict:
                 pass
                 
     termination_attempted = False
-    
+
     if not matching_pids:
-        # Check one more time using original is_process_running just in case
+        # Before attempting taskkill, confirm the process is actually running
         if exe_name and not is_process_running(exe_name):
-            pass
-            
+            logger.info(f"[CloseApp] '{exe_name}' is not running. Nothing to terminate.")
+            return {
+                "success": False,
+                "output": f"'{exe_name}' does not appear to be running.",
+                "attempted": False,
+                "pids": [],
+                "still_exists": False
+            }
+        # Process detected by name but psutil didn't enumerate a PID — fall through to taskkill
+
     try:
         if pid:
             res = subprocess.run(["taskkill", "/f", "/t", "/pid", str(pid)], capture_output=True, text=True, check=False)
@@ -55,23 +63,51 @@ def terminate_process_tree(exe_name: str, pid: Optional[int] = None) -> dict:
         elif exe_name:
             res = subprocess.run(["taskkill", "/f", "/t", "/im", exe_name], capture_output=True, text=True, check=False)
             termination_attempted = True
-            
-        # Verify it terminated (with up to 3 seconds loop)
+
+        # Verify termination — check PIDs when available, otherwise check by name
         for _ in range(15):
             time.sleep(0.2)
-            still_running = False
-            for p in matching_pids:
-                if psutil.pid_exists(p):
-                    try:
-                        proc = psutil.Process(p)
-                        if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
-                            still_running = True
-                            break
-                    except Exception: pass
-            if not still_running and exe_name and not is_process_running(exe_name):
-                return {"success": True, "output": f"Successfully closed process tree for '{exe_name}'.", "attempted": termination_attempted, "pids": matching_pids, "still_exists": False}
-                
-        return {"success": False, "output": f"Process '{exe_name}' still detected after termination attempt.", "attempted": termination_attempted, "pids": matching_pids, "still_exists": True}
+
+            if exe_name and not is_process_running(exe_name):
+                # Confirmed gone by name check — authoritative
+                return {
+                    "success": True,
+                    "output": f"Successfully closed '{exe_name}'.",
+                    "attempted": termination_attempted,
+                    "pids": matching_pids,
+                    "still_exists": False
+                }
+
+            if matching_pids:
+                still_running = False
+                for p in matching_pids:
+                    if psutil.pid_exists(p):
+                        try:
+                            proc = psutil.Process(p)
+                            if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
+                                still_running = True
+                                break
+                        except Exception:
+                            pass
+                if not still_running:
+                    # All original PIDs gone — double-check by name to be safe
+                    if not is_process_running(exe_name):
+                        return {
+                            "success": True,
+                            "output": f"Successfully closed '{exe_name}'.",
+                            "attempted": termination_attempted,
+                            "pids": matching_pids,
+                            "still_exists": False
+                        }
+
+        # Timed out — process still alive
+        return {
+            "success": False,
+            "output": f"Process '{exe_name}' still detected after termination attempt.",
+            "attempted": termination_attempted,
+            "pids": matching_pids,
+            "still_exists": True
+        }
     except Exception as e:
         msg = f"Failed to terminate process tree for '{exe_name}': {e}"
         logger.error(msg)

@@ -99,6 +99,9 @@ class EntityResolver:
                         else:
                             resolved_args["app_name"] = resolved_path
                     else:
+                        # Non-absolute resolved target (e.g. "code.exe", "notepad.exe", "ms-settings:")
+                        # Pass it directly so open_app doesn't re-run a full resolution pass
+                        # that may fail when the short name isn't on PATH.
                         resolved_args["app_name"] = resolved_path
                     
         elif tool_name == "open_folder":
@@ -113,13 +116,13 @@ class EntityResolver:
             if file_path:
                 resolved_args["path"] = file_path
 
-        elif tool_name in ["close_app", "close_process"]:
+        elif tool_name in ["close_app", "close_process", "switch_to_app", "minimize_app", "maximize_app", "restore_app"]:
             target_name = args.get("app_name") or args.get("process_name", "")
             from brain.app_resolver import app_resolver
             resolved_path = app_resolver.resolve_app(target_name)
             if resolved_path:
                 exe_name = os.path.basename(resolved_path)
-                if tool_name == "close_app":
+                if tool_name in ["close_app", "switch_to_app", "minimize_app", "maximize_app", "restore_app"]:
                     resolved_args["app_name"] = exe_name
                 else:
                     resolved_args["process_name"] = exe_name
