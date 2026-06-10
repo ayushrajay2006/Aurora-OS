@@ -451,6 +451,34 @@ def run_chat_loop():
                         matches = res.get("data", {}).get("matches", [])
                         if matches:
                             handle_search_continuation(matches, args.get("query", ""))
+                            
+                    elif tool_name == "analyze_screen" and res.get("success"):
+                        print(f"Aurora > ", end="", flush=True)
+                        state_manager.update_state(status="Summarizing")
+                        
+                        sys_prompt = "You have just executed 'analyze_screen'. The system has returned the extracted active window title, process name, and OCR text. Your job is to concisely answer the user's original question based on this data. Be conversational, natural, and friendly. Do not output JSON."
+                        analysis_msgs = [
+                            {"role": "system", "content": sys_prompt},
+                            {"role": "user", "content": user_input},
+                            {"role": "system", "content": f"Tool Output:\n{res.get('output')}"}
+                        ]
+                        
+                        full_analysis = ""
+                        try:
+                            stream = llm_client.chat(analysis_msgs, stream=True)
+                            for chunk in stream:
+                                full_analysis += chunk
+                                sys.stdout.write(chunk)
+                                sys.stdout.flush()
+                            print()
+                            
+                            # Log the final conversational answer
+                            reply_sanitized = sanitize_assistant_reply(full_analysis)
+                            memory.save_message("assistant", reply_sanitized)
+                            state_manager.add_message("assistant", reply_sanitized)
+                            chat_history.append({"role": "assistant", "content": reply_sanitized})
+                        except Exception as e:
+                            print(f"\n[!] Error generating analysis: {e}")
                     
             state_manager.update_state(status="Online")
             

@@ -10,7 +10,7 @@ ACTION_INTENT_PHRASES = [
     "open ", "launch ", "start ", "run ", "close ", "quit ", "kill ",
     "minimize ", "minimise ", "maximise ", "maximize ", "restore ", "switch ", "switch to ",
     "show ", "hide ", "find ", "search ", "focus ",
-    "what ", "read ", "describe ", "analyze "
+    "what ", "whats ", "what's ", "read ", "describe ", "analyze ", "who "
 ]
 
 SYSTEM_PROMPT_TEMPLATE = """You are Aurora, an advanced, local-first personal operating system assistant for Windows, inspired by the beauty and intelligence of the Aurora Borealis.
@@ -87,6 +87,7 @@ ACTION_TOOLS = {
     "close_app", "close_process",
     "switch_to_app", "minimize_app", "maximize_app", "restore_app",
     "search_files", "read_pdf", "remember_fact", "forget_fact", "discover_apps",
+    "analyze_screen"
 }
 
 class Planner:
