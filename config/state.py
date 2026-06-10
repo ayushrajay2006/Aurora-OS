@@ -15,6 +15,8 @@ class AppState:
     tool_logs: List[str] = field(default_factory=list)
     pending_confirmation: Optional[Dict[str, Any]] = None
     error_notification: Optional[str] = None
+    last_ui_x: Optional[int] = None
+    last_ui_y: Optional[int] = None
     last_update: float = field(default_factory=time.time)
 
 class StateManager:
@@ -47,6 +49,8 @@ class StateManager:
                 tool_logs=list(self._state.tool_logs),
                 pending_confirmation=dict(self._state.pending_confirmation) if self._state.pending_confirmation else None,
                 error_notification=self._state.error_notification,
+                last_ui_x=self._state.last_ui_x,
+                last_ui_y=self._state.last_ui_y,
                 last_update=self._state.last_update
             )
 

@@ -18,9 +18,12 @@ import tools.open_website
 import tools.search_files
 import tools.read_pdf
 import tools.memory_control
+import tools.locate_ui_element
 import tools.discover_apps
 import tools.control_app
 import tools.analyze_screen
+import tools.mouse_control
+import tools.keyboard_control
 from tools.registry import registry
 
 def print_banner():
@@ -224,49 +227,6 @@ def run_chat_loop():
                     chat_history = chat_history[-30:]
                 continue
                 
-            # Intercept pending search context continuation
-            import urllib.parse
-            import webbrowser
-            global pending_search_context
-            if 'pending_search_context' not in globals():
-                pending_search_context = None
-                
-            if pending_search_context:
-                site = pending_search_context
-                query = urllib.parse.quote(user_input.strip())
-                pending_search_context = None
-                
-                urls = {
-                    "youtube": f"https://www.youtube.com/results?search_query={query}",
-                    "google": f"https://www.google.com/search?q={query}",
-                    "gmail": f"https://mail.google.com/mail/u/0/#search/{query}",
-                    "github": f"https://github.com/search?q={query}",
-                    "reddit": f"https://www.reddit.com/search/?q={query}",
-                    "wikipedia": f"https://en.wikipedia.org/wiki/Special:Search?search={query}"
-                }
-                
-                target_url = urls.get(site, f"https://www.google.com/search?q={query}")
-                print(f"Aurora > Opening {site} search for '{user_input}'...")
-                try:
-                    webbrowser.open(target_url)
-                except Exception as e:
-                    logger.error(f"Failed to open browser: {e}")
-                    
-                chat_history.append({"role": "user", "content": user_input})
-                chat_history.append({"role": "assistant", "content": f"Opening {site} search for '{user_input}'."})
-                continue
-                
-            # Check for initial search context start
-            if user_input.lower().startswith("search "):
-                site = user_input[7:].strip().lower()
-                if site in ["youtube", "google", "gmail", "github", "reddit", "wikipedia"]:
-                    pending_search_context = site
-                    reply = f"What would you like to search on {site.capitalize()}?"
-                    print(f"Aurora > {reply}")
-                    chat_history.append({"role": "user", "content": user_input})
-                    chat_history.append({"role": "assistant", "content": reply})
-                    continue
-
             # Deterministic direct tool execution for exact no-arg diagnostics.
             # Deterministic direct tool execution for application discovery.
             command = user_input.lower().strip()
@@ -440,13 +400,26 @@ def run_chat_loop():
                             memory.update_action(action_id, "cancelled", {"output": "Aborted: verification mismatch."})
                             continue
                     
-                    # Execute tool
                     print(f"     [*] Executing '{tool_name}'...")
                     state_manager.update_state(status="Executing")
                     res = registry.execute_tool(tool_name, args)
                     print(f"     [Result] Success={res.get('success')} | Output='{res.get('output')}'")
                     memory.update_action(action_id, "success" if res.get("success") else "failed", res)
                     
+                    if not res.get("success"):
+                        print("\n     [!] Execution halted.")
+                        print(f"     Failed step:\n     {tool_name}({args})")
+                        print(f"\n     Reason:\n     {res.get('output')}")
+                        skipped = [a.get("tool_name") or a.get("tool") for a in actions[idx:]]
+                        if skipped:
+                            print(f"\n     Skipped actions:\n     * " + "\n     * ".join(skipped))
+                            abort_msg = f"Execution halted. Failed step: {tool_name}. Reason: {res.get('output')}. Skipped actions: {', '.join(skipped)}."
+                            memory.save_message("system", abort_msg)
+                            state_manager.add_message("system", abort_msg)
+                            chat_history.append({"role": "system", "content": abort_msg})
+                        print()
+                        break
+                        
                     if tool_name == "search_files" and res.get("success"):
                         matches = res.get("data", {}).get("matches", [])
                         if matches:

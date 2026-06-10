@@ -22,10 +22,10 @@ class ScreenshotService:
         """Captures the entire primary display."""
         try:
             img = ImageGrab.grab()
-            return self._save_image(img, "desktop")
+            return self._save_image(img, "desktop"), 0, 0
         except Exception as e:
             logger.error(f"[Vision] Failed to capture screen: {e}")
-            return ""
+            return "", 0, 0
 
     def capture_active_window(self) -> str:
         """Captures only the currently active foreground window."""
@@ -40,7 +40,7 @@ class ScreenshotService:
             # Sometimes rect can be out of bounds for maximized windows
             # PIL ImageGrab handles standard tuples
             img = ImageGrab.grab(bbox=rect)
-            return self._save_image(img, "active_window")
+            return self._save_image(img, "active_window"), rect[0], rect[1]
         except Exception as e:
             logger.error(f"[Vision] Failed to capture active window: {e}. Falling back to full screen.")
             return self.capture_screen()

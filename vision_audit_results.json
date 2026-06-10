@@ -1,0 +1,83 @@
+{
+  "Palworld": {
+    "target": "Palworld",
+    "runs": [
+      {
+        "ram_before_mb": 459.53125,
+        "capture_time": 0.4528857999976026,
+        "ocr_time": 33.53043550000439,
+        "ram_after_mb": 1597.70703125,
+        "cpu_during": 93.4,
+        "window_title": "Pal  ",
+        "process_name": "Palworld-WinGDK-Shipping.exe",
+        "ocr_char_count": 401,
+        "ocr_avg_confidence": 0.6758240086101781,
+        "total_latency": 33.98332130000199,
+        "pass": true
+      },
+      {
+        "ram_before_mb": 1597.70703125,
+        "capture_time": 0.08349379999708617,
+        "ocr_time": 15.597657899998012,
+        "ram_after_mb": 1768.9765625,
+        "cpu_during": 92.7,
+        "window_title": "Pal  ",
+        "process_name": "Palworld-WinGDK-Shipping.exe",
+        "ocr_char_count": 17,
+        "ocr_avg_confidence": 0.793372021903792,
+        "total_latency": 15.681151699995098,
+        "pass": true
+      },
+      {
+        "ram_before_mb": 1768.9765625,
+        "capture_time": 0.6278125000026193,
+        "ocr_time": 18.257265400003234,
+        "ram_after_mb": 1778.44140625,
+        "cpu_during": 264.4,
+        "window_title": "Pal  ",
+        "process_name": "Palworld-WinGDK-Shipping.exe",
+        "ocr_char_count": 107,
+        "ocr_avg_confidence": 0.6671679615718933,
+        "total_latency": 18.885077900005854,
+        "pass": true
+      },
+      {
+        "ram_before_mb": 1778.44140625,
+        "capture_time": 0.6864662000007229,
+        "ocr_time": 25.15970329999982,
+        "ram_after_mb": 1773.2421875,
+        "cpu_during": 238.8,
+        "window_title": "Pal  ",
+        "process_name": "Palworld-WinGDK-Shipping.exe",
+        "ocr_char_count": 316,
+        "ocr_avg_confidence": 0.7565159323218876,
+        "total_latency": 25.846169500000542,
+        "pass": true
+      },
+      {
+        "ram_before_mb": 1773.2421875,
+        "capture_time": 0.3844572999951197,
+        "ocr_time": 26.11335859999963,
+        "ram_after_mb": 1776.37890625,
+        "cpu_during": 171.1,
+        "window_title": "Pal  ",
+        "process_name": "Palworld-WinGDK-Shipping.exe",
+        "ocr_char_count": 301,
+        "ocr_avg_confidence": 0.7591800640452471,
+        "total_latency": 26.497815899994748,
+        "pass": true
+      }
+    ],
+    "aggregated": {
+      "avg_latency": 24.178707259999648,
+      "best_latency": 15.681151699995098,
+      "worst_latency": 33.98332130000199,
+      "std_dev_latency": 7.150526448725512,
+      "avg_confidence": 0.7304119976905996,
+      "avg_chars": 228.4,
+      "passes": 5,
+      "sample_title": "Pal  ",
+      "sample_process": "Palworld-WinGDK-Shipping.exe"
+    }
+  }
+}

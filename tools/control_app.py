@@ -185,7 +185,11 @@ class ControlAppBase(BaseTool):
                 self.force_set_foreground_window(target_hwnd)
                 time.sleep(0.5)
                 # Verify
-                if win32gui.GetForegroundWindow() == target_hwnd:
+                # Verify by checking if the foreground window belongs to the app's PIDs
+                fg_hwnd = win32gui.GetForegroundWindow()
+                _, fg_pid = win32process.GetWindowThreadProcessId(fg_hwnd) if fg_hwnd else (0, 0)
+                
+                if fg_pid in pids or fg_hwnd == target_hwnd:
                     desktop_context.update_focused(app_name)
                     return {"success": True, "output": f"Successfully switched to '{app_name}'."}
                 else:
@@ -237,3 +241,78 @@ class MaximizeAppTool(ControlAppBase):
 class RestoreAppTool(ControlAppBase):
     def execute(self, app_name: str) -> dict:
         return self.execute_control(app_name, "restore")
+
+@registry.register(
+    name="wait_for_window",
+    description="Waits for an application to launch and fully render its window on screen. Always use this between opening an app and interacting with it.",
+    args_schema={"app_name": {"type": "string"}},
+    risk_level="low"
+)
+class WaitForWindowTool(ControlAppBase):
+    def execute(self, app_name: str, timeout: int = 10) -> dict:
+        if not HAS_DEPS:
+            return {"success": False, "output": "Missing required dependencies."}
+            
+        logger.info(f"[WaitWindow] Waiting for '{app_name}' (timeout: {timeout}s)...")
+        start_time = time.time()
+        
+        process_pass = False
+        visible_pass = False
+        foreground_pass = False
+        
+        pids = []
+        target_hwnd = None
+        
+        while time.time() - start_time < timeout:
+            if not process_pass:
+                pids = get_pids_for_app(app_name)
+                if pids:
+                    process_pass = True
+                    
+            if process_pass and not visible_pass:
+                hwnds = get_hwnds_for_pids(pids)
+                if hwnds:
+                    # Filter real hwnds
+                    real_hwnds = []
+                    for h in hwnds:
+                        title = win32gui.GetWindowText(h).strip()
+                        if title:
+                            ex_style = win32api.GetWindowLong(h, win32con.GWL_EXSTYLE)
+                            if not (ex_style & win32con.WS_EX_TOOLWINDOW):
+                                rect = win32gui.GetWindowRect(h)
+                                width = rect[2] - rect[0]
+                                height = rect[3] - rect[1]
+                                if width > 0 and height > 0 or win32gui.IsIconic(h):
+                                    real_hwnds.append(h)
+                    target_hwnd = real_hwnds[0] if real_hwnds else (hwnds[0] if hwnds else None)
+                    if target_hwnd:
+                        visible_pass = True
+                        
+            if visible_pass and not foreground_pass:
+                if win32gui.GetForegroundWindow() == target_hwnd:
+                    foreground_pass = True
+                    break # We have all 3!
+            
+            time.sleep(0.5)
+            
+        # Compile result
+        output_msg = (
+            f"Wait results for '{app_name}':\n"
+            f"* Process: {'PASS' if process_pass else 'FAIL'}\n"
+            f"* Visible Window: {'NOT TESTED' if not process_pass else ('PASS' if visible_pass else 'FAIL')}\n"
+            f"* Foreground: {'NOT TESTED' if not visible_pass else ('PASS' if foreground_pass else 'FAIL')}"
+        )
+        
+        # Determine success condition. The user requires wait_for_window to ensure readiness.
+        # If it doesn't get to visible, it's definitely a failure. 
+        # Foreground isn't strictly required to pass `wait_for_window` if `switch_to_app` runs next, but `switch_to_app` will fix foreground.
+        # Actually wait, let's consider it success if the visible window exists, since switch_to_app is called after.
+        success = visible_pass
+        
+        return {"success": success, "output": output_msg}
+
+tool_switch = SwitchToAppTool()
+tool_min = MinimizeAppTool()
+tool_max = MaximizeAppTool()
+tool_restore = RestoreAppTool()
+tool_wait = WaitForWindowTool()

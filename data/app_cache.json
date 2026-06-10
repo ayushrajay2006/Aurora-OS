@@ -1,5 +1,24 @@
 {
     "edge": "msedge.exe",
     "steam": "C:\\Program Files (x86)\\Steam\\steam.exe",
-    "discord": "C:\\Users\\ayush\\AppData\\Local\\Discord\\Update.exe"
+    "discord": "C:\\Users\\ayush\\AppData\\Local\\Discord\\Update.exe",
+    "valorant": "C:\\Riot Games\\VALORANT\\Riot Client\\RiotClientServices.exe",
+    "notepad": "notepad.exe",
+    "c:\\program files (x86)\\steam\\steam.exe": "{7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\\Steam\\steam.exe",
+    "c:\\users\\ayush\\appdata\\local\\discord\\update.exe": "com.squirrel.Discord.Discord",
+    "vs code": "code.exe",
+    "taskmgr": "taskmgr.exe",
+    "vscode": "code.exe",
+    "god of war": "D:\\Reality Escape\\God of War - Ragnarok\\GoWR.exe",
+    "palworld": "D:\\Reality Escape\\Palworld-SteamRIP.com\\Palworld\\wdapp.exe",
+    "msedge.exe": "msedge.exe",
+    "explorer": "explorer.exe",
+    "explorer.exe": "explorer.exe",
+    "com.squirrel.discord.discord": "C:\\Users\\ayush\\AppData\\Local\\Discord\\Update.exe",
+    "valorant tracker": "C:\\Program Files (x86)\\Overwolf\\OverwolfLauncher.exe",
+    "overwolflauncher.exe": "C:\\Program Files (x86)\\Overwolf\\OverwolfLauncher.exe",
+    "msedge": "msedge.exe",
+    "calc": "calc.exe",
+    "mspaint": "mspaint.exe",
+    "code": "OpenAI.Codex_2p2nqsd0c76g0!App"
 }

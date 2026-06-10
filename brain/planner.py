@@ -10,7 +10,8 @@ ACTION_INTENT_PHRASES = [
     "open ", "launch ", "start ", "run ", "close ", "quit ", "kill ",
     "minimize ", "minimise ", "maximise ", "maximize ", "restore ", "switch ", "switch to ",
     "show ", "hide ", "find ", "search ", "focus ",
-    "what ", "whats ", "what's ", "read ", "describe ", "analyze ", "who "
+    "what ", "whats ", "what's ", "read ", "describe ", "analyze ", "who ",
+    "type ", "press ", "scroll ", "move "
 ]
 
 SYSTEM_PROMPT_TEMPLATE = """You are Aurora, an advanced, local-first personal operating system assistant for Windows, inspired by the beauty and intelligence of the Aurora Borealis.
@@ -79,6 +80,10 @@ Let me open Notepad for you.
     Example: User says "minimize discord" → `minimize_app(app_name='discord')`
 12. **Proactive Memory Recording**: You must be proactive in recording key personal facts, preferences, and system settings (such as the user's name, age, birthday, favorite games, or custom folder paths). However, do NOT record casual chit-chat, temporary statuses (e.g., playing a game "recently"), or fleeting conversational comments. Only save facts that have long-term utility for personalizing system actions. Do not call 'remember_fact' if the key-value pair is already listed in the 'Stored Long-Term Memories & Preferences' section, unless the value has changed.
 13. **Preventing Technical Hallucinations (Search Rule)**: You must never guess or hallucinate specific complex formulas, Rubik's cube algorithms (e.g., CFOP PLL/OLL algorithms), scientific constants, or detailed technical references that you do not have stored in your long-term memories or local files. If the user asks for such technical information, you MUST NOT generate them from memory. Instead, call the `open_website` tool with a descriptive search query (e.g., `open_website(url="standard CFOP PLL algorithms sheet")`) to perform a Google search on the user's browser, ensuring they receive accurate information.
+14. **Application-Control Priority Rule**: Explicit application-control commands (e.g. "open edge switch to edge type batman trailer press enter") MUST ALWAYS take precedence over search actions. Do NOT convert an explicit chain of app control commands into an `open_website` search query.
+15. **Mandatory Window Verification Chain**: You MUST NEVER plan `switch_to_app` immediately after `open_app`. You MUST ALWAYS insert a `wait_for_window` action between them. Even if the user says "open edge and switch to edge", you MUST output `open_app` -> `wait_for_window` -> `switch_to_app`. This applies to ALL applications.
+16. **Direct Search URL Construction**: When asked to search a website (e.g., "search ironman on youtube", "look up python on github"), do NOT chain `open_website` with typing actions (`type_text`). Instead, construct the exact search URL natively (e.g., `open_website(url="https://www.youtube.com/results?search_query=ironman")`).
+17. **Coordinate Pointer Chains**: If you need to point at a specific UI element, do NOT guess coordinates. You MUST chain `locate_ui_element` and `move_mouse` in the SAME array of actions. Pass `x="last_x"` and `y="last_y"` into `move_mouse`. Example: `[{"tool_name": "locate_ui_element", "arguments": {"text": "File"}}, {"tool_name": "move_mouse", "arguments": {"x": "last_x", "y": "last_y"}}]`. DO NOT click anything.
 """
 
 # Tool names that represent real system actions (not conversational)
@@ -87,7 +92,8 @@ ACTION_TOOLS = {
     "close_app", "close_process",
     "switch_to_app", "minimize_app", "maximize_app", "restore_app",
     "search_files", "read_pdf", "remember_fact", "forget_fact", "discover_apps",
-    "analyze_screen"
+    "analyze_screen", "move_mouse", "scroll", "type_text", "press_key", "hotkey",
+    "wait_for_window", "locate_ui_element"
 }
 
 class Planner:

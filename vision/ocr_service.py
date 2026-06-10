@@ -42,6 +42,30 @@ class OCRService:
             logger.error(f"[Vision] OCR Extraction failed: {e}")
             return []
 
+    def get_spatial_text(self, image_path: str, offset_x: int = 0, offset_y: int = 0) -> list:
+        """
+        Extracts text and returns a structured list with absolute spatial coordinates.
+        Format: {"text": str, "x": int, "y": int, "width": int, "height": int, "confidence": float}
+        """
+        raw_results = self.extract_text(image_path)
+        spatial_data = []
+        for item in raw_results:
+            box = item["box"] # [[x1,y1], [x2,y1], [x2,y2], [x1,y2]]
+            x_coords = [pt[0] for pt in box]
+            y_coords = [pt[1] for pt in box]
+            x1, x2 = min(x_coords), max(x_coords)
+            y1, y2 = min(y_coords), max(y_coords)
+            
+            spatial_data.append({
+                "text": item["text"],
+                "x": x1 + offset_x,
+                "y": y1 + offset_y,
+                "width": x2 - x1,
+                "height": y2 - y1,
+                "confidence": item["confidence"]
+            })
+        return spatial_data
+
     def get_raw_text(self, image_path: str) -> str:
         """Returns a single combined string of all extracted text."""
         self._lazy_load()

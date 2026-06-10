@@ -1,0 +1,229 @@
+{
+  "1. Memory": [
+    {
+      "test_name": "Save Memory",
+      "command": "remember_fact",
+      "planned": [],
+      "resolved": [],
+      "output": "Successfully remembered: 'favorite_color' = 'neon green'.",
+      "passed": true,
+      "root_cause": ""
+    },
+    {
+      "test_name": "Deterministic Retrieval",
+      "command": "what is my favorite color",
+      "planned": [],
+      "resolved": [],
+      "output": "Favorite color is neon green.",
+      "passed": true,
+      "root_cause": ""
+    }
+  ],
+  "2. Application Control": [
+    {
+      "test_name": "open_app",
+      "command": "open_app(notepad)",
+      "planned": [],
+      "resolved": [],
+      "output": "Successfully opened 'notepad'.",
+      "passed": true,
+      "root_cause": ""
+    },
+    {
+      "test_name": "close_app",
+      "command": "close_app(notepad)",
+      "planned": [],
+      "resolved": [],
+      "output": "Successfully closed 'notepad.exe'.",
+      "passed": true,
+      "root_cause": ""
+    }
+  ],
+  "3. Window Control": [
+    {
+      "test_name": "minimize_app",
+      "command": "minimize_app(mspaint)",
+      "planned": [],
+      "resolved": [],
+      "output": "Successfully minimized 'mspaint'.",
+      "passed": true,
+      "root_cause": ""
+    },
+    {
+      "test_name": "restore_app",
+      "command": "restore_app(mspaint)",
+      "planned": [],
+      "resolved": [],
+      "output": "Successfully restored 'mspaint'.",
+      "passed": true,
+      "root_cause": ""
+    },
+    {
+      "test_name": "switch_to_app & foreground verify",
+      "command": "switch_to_app(mspaint)",
+      "planned": [],
+      "resolved": [],
+      "output": "Successfully switched to 'mspaint'.",
+      "passed": true,
+      "root_cause": ""
+    }
+  ],
+  "7. OCR Perception": [
+    {
+      "test_name": "analyze_screen text detection",
+      "command": "analyze_screen",
+      "planned": [],
+      "resolved": [],
+      "output": "{'window_title': 'Cisco Ramon once said... | The Flash - YouTube - Brave', 'process_name': 'brave.exe', 'ocr_text_visible': 'Cisco Ramon once said__. | The Flash 5 & 0 Q F 3.21 /11.09 this video {', '...",
+      "passed": false,
+      "root_cause": "Failed to read typed text via OCR"
+    }
+  ],
+  "8. Mouse & 9. Keyboard": [
+    {
+      "test_name": "move_mouse",
+      "command": "move_mouse(500, 500)",
+      "planned": [],
+      "resolved": [],
+      "output": "Mouse moved to (500, 500)",
+      "passed": true,
+      "root_cause": ""
+    },
+    {
+      "test_name": "type_text",
+      "command": "type_text(test)",
+      "planned": [],
+      "resolved": [],
+      "output": "Typed text successfully",
+      "passed": true,
+      "root_cause": ""
+    }
+  ],
+  "10. Execution Chain Verification": [
+    {
+      "test_name": "Hard Abort on Failure",
+      "command": "chain",
+      "planned": [
+        {
+          "tool_name": "open_app",
+          "arguments": {
+            "app_name": "notepad"
+          }
+        },
+        {
+          "tool_name": "wait_for_window",
+          "arguments": {
+            "app_name": "notepad"
+          }
+        },
+        {
+          "tool_name": "close_app",
+          "arguments": {
+            "app_name": "notepad"
+          }
+        },
+        {
+          "tool_name": "switch_to_app",
+          "arguments": {
+            "app_name": "notepad"
+          }
+        },
+        {
+          "tool_name": "type_text",
+          "arguments": {
+            "text": "hello"
+          }
+        }
+      ],
+      "resolved": [
+        "open_app: True",
+        "wait_for_window: True",
+        "close_app: True",
+        "switch_to_app: False"
+      ],
+      "output": "['open_app: True', 'wait_for_window: True', 'close_app: True', 'switch_to_app: False']",
+      "passed": true,
+      "root_cause": ""
+    }
+  ],
+  "5. Search Routing & 11. Planner Verification": [
+    {
+      "test_name": "Planner: search rust libraries on github",
+      "command": "search rust libraries on github",
+      "planned": [
+        {
+          "tool_name": "open_website",
+          "arguments": {
+            "url": "https://github.com/search?q=Rust+libraries"
+          }
+        }
+      ],
+      "resolved": [
+        {
+          "tool_name": "open_website",
+          "arguments": {
+            "url": "https://github.com/search?q=Rust+libraries"
+          }
+        }
+      ],
+      "output": "Sure! I'll open your default web browser and search for Rust libraries on GitHub.",
+      "passed": true,
+      "root_cause": ""
+    },
+    {
+      "test_name": "Planner: open vscode switch to it type hello",
+      "command": "open vscode switch to it type hello",
+      "planned": [
+        {
+          "tool_name": "open_app",
+          "arguments": {
+            "app_name": "vscode"
+          }
+        },
+        {
+          "tool_name": "wait_for_window"
+        },
+        {
+          "tool_name": "switch_to_app",
+          "arguments": {
+            "app_name": "vscode"
+          }
+        },
+        {
+          "tool_name": "type_text",
+          "arguments": {
+            "text": "hello",
+            "interval": 0.01
+          }
+        }
+      ],
+      "resolved": [
+        {
+          "tool_name": "open_app",
+          "arguments": {
+            "app_name": "vscode"
+          }
+        },
+        {
+          "tool_name": "wait_for_window"
+        },
+        {
+          "tool_name": "switch_to_app",
+          "arguments": {
+            "app_name": "vscode"
+          }
+        },
+        {
+          "tool_name": "type_text",
+          "arguments": {
+            "text": "hello",
+            "interval": 0.01
+          }
+        }
+      ],
+      "output": "Opening Visual Studio Code and switching to it!",
+      "passed": true,
+      "root_cause": ""
+    }
+  ]
+}

@@ -1,14 +1,94 @@
 {
     "msedge.exe": {
         "exe_name": "msedge.exe",
-        "pid": null
+        "pid": 47192
     },
     "c:\\program files (x86)\\steam\\steam.exe": {
         "exe_name": "steam.exe",
-        "pid": null
+        "pid": 34924
     },
     "steam.exe": {
         "exe_name": "steam.exe",
-        "pid": null
+        "pid": 15468
+    },
+    "notepad": {
+        "exe_name": "notepad.exe",
+        "pid": 41588
+    },
+    "notepad.exe": {
+        "exe_name": "notepad.exe",
+        "pid": 41588
+    },
+    "vs code": {
+        "exe_name": "code.exe",
+        "pid": 40728
+    },
+    "code.exe": {
+        "exe_name": "code.exe",
+        "pid": 40728
+    },
+    "discord": {
+        "exe_name": "discord.exe",
+        "pid": 2428
+    },
+    "discord.exe": {
+        "exe_name": "discord.exe",
+        "pid": 2428
+    },
+    "steam": {
+        "exe_name": "steam.exe",
+        "pid": 15468
+    },
+    "edge": {
+        "exe_name": "msedge.exe",
+        "pid": 40992
+    },
+    "taskmgr": {
+        "exe_name": "taskmgr.exe",
+        "pid": 10472
+    },
+    "taskmgr.exe": {
+        "exe_name": "taskmgr.exe",
+        "pid": 10472
+    },
+    "vscode": {
+        "exe_name": "code.exe",
+        "pid": 27616
+    },
+    "d:\\reality escape\\god of war - ragnarok\\gowr.exe": {
+        "exe_name": "gowr.exe",
+        "pid": 25808
+    },
+    "gowr.exe": {
+        "exe_name": "gowr.exe",
+        "pid": 25808
+    },
+    "c:\\users\\ayush\\appdata\\local\\discord\\update.exe": {
+        "exe_name": "discord.exe",
+        "pid": 27808
+    },
+    "msedge": {
+        "exe_name": "msedge.exe",
+        "pid": 47192
+    },
+    "calc": {
+        "exe_name": "calc.exe",
+        "pid": 23228
+    },
+    "calc.exe": {
+        "exe_name": "calc.exe",
+        "pid": 23228
+    },
+    "mspaint": {
+        "exe_name": "mspaint.exe",
+        "pid": 31064
+    },
+    "mspaint.exe": {
+        "exe_name": "mspaint.exe",
+        "pid": 31064
+    },
+    "code": {
+        "exe_name": "OpenAI.Codex_2p2nqsd0c76g0!App",
+        "pid": 45408
     }
 }

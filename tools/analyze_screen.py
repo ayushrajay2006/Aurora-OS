@@ -14,15 +14,15 @@ class AnalyzeScreenTool(BaseTool):
         result = window_classifier.analyze_current_screen()
         
         # Build a structured response for the LLM to ingest
-        output_str = (
-            f"Active Window Title: {result.get('window_title', 'Unknown')}\n"
-            f"Active Process: {result.get('process_name', 'Unknown')}\n"
-            f"Extracted OCR Text: {result.get('ocr_text_visible', 'None')}"
-        )
-        
         return {
             "success": True,
-            "output": output_str
+            "output": {
+                "window_title": result["window_title"],
+                "process_name": result["process_name"],
+                "ocr_text_visible": result["ocr_text_visible"],
+                "spatial_data": result.get("spatial_data", []),
+                "screenshot_path": result["screenshot_path"]
+            }
         }
 
 tool_instance = AnalyzeScreenTool()

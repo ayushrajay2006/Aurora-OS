@@ -48,19 +48,29 @@ class WindowClassifier:
         # 1. Metadata extraction
         metadata = self.get_active_window_info()
         
-        # 2. Screenshot
-        img_path = screenshot_service.capture_active_window()
+        from brain.app_resolver import AppResolver
+        resolver = AppResolver()
+        is_game = resolver.is_game(metadata.get("process_exe", ""))
         
-        # 3. OCR extraction
+        # 2. Screenshot
+        img_path, offset_x, offset_y = screenshot_service.capture_active_window()
+        
+        # 3. OCR extraction (Bypass for known games to avoid latency spikes)
         ocr_text = ""
-        if img_path:
-            ocr_text = ocr_service.get_raw_text(img_path)
+        spatial_data = []
+        if img_path and not is_game:
+            spatial_data = ocr_service.get_spatial_text(img_path, offset_x=offset_x, offset_y=offset_y)
+            ocr_text = " ".join([item["text"] for item in spatial_data])
+            
+        if is_game:
+            logger.info(f"[Vision] Skipped OCR for recognized game process: {metadata['process_name']}")
             
         return {
             "success": True,
             "window_title": metadata["title"],
             "process_name": metadata["process_name"],
             "ocr_text_visible": ocr_text,
+            "spatial_data": spatial_data,
             "screenshot_path": img_path
         }
 

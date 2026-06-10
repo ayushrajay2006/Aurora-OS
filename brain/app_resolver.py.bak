@@ -14,9 +14,6 @@ except ImportError:
     HAS_RAPIDFUZZ = False
 
 CACHE_FILE = os.path.join("data", "app_cache.json")
-CUSTOM_GAME_DIRS = [
-    r"D:\Reality Escape",
-]
 
 class AppResolver:
     def __init__(self):
@@ -31,8 +28,6 @@ class AppResolver:
                     self.cache = json.load(f)
             except Exception:
                 self.cache = {}
-        
-        self.start_apps_cache = {}
 
     def save_cache(self):
         os.makedirs("data", exist_ok=True)
@@ -45,38 +40,6 @@ class AppResolver:
     def add_to_cache(self, query: str, path: str):
         self.cache[query.strip().lower()] = path
         self.save_cache()
-
-    def _is_app_id(self, value: str) -> bool:
-        return "!" in value or value.startswith("shell:AppsFolder\\") or value.startswith("Microsoft.") or value.startswith("com.")
-
-    def _is_launchable_executable(self, value: str) -> bool:
-        if not value:
-            return False
-        if os.path.isabs(value):
-            return os.path.exists(value) and value.lower().endswith((".exe", ".msc"))
-        return value.lower().endswith((".exe", ".msc"))
-
-    def _is_preferred_target(self, value: str) -> bool:
-        if not value:
-            return False
-        if os.path.isabs(value) and os.path.exists(value):
-            return True
-        if value.lower().endswith(".exe"):
-            return True
-        if value.startswith("steam://"):
-            return False
-        if "!" in value:
-            return False
-        return False
-
-    def _merge_choices(self, choices_map: Dict[str, str], incoming: Dict[str, str]):
-        for key, value in incoming.items():
-            current = choices_map.get(key)
-            if current is None:
-                choices_map[key] = value
-                continue
-            if self._is_preferred_target(value) and not self._is_preferred_target(current):
-                choices_map[key] = value
 
     def resolve_lnk_powershell(self, lnk_path: str) -> Optional[str]:
         try:
@@ -182,58 +145,19 @@ class AppResolver:
             for file in files:
                 if file.lower().endswith(".exe"):
                     file_lower = file.lower()
-                    # Skip unambiguous non-game executables only
-                    if any(x in file_lower for x in [
-                        "unitycrashhandler", "crashreporter", "unins000",
-                        "_setup", "redist", "vcredist", "dxwebsetup",
-                        "dxsetup", "dotnetfx", "oalinst",
-                        "quicksfv", "crs-", "crs_"
-                    ]):
+                    if any(x in file_lower for x in ["unitycrashhandler", "crashreporter", "unins", "setup", "register", "launcher", "helper", "config", "tool"]):
                         continue
                     exes.append(os.path.join(root, file))
-
         if not exes:
             return None
-
-        # 1. Try exact/substring name match first
+        
         clean_app = app_name.lower().replace(" ", "").replace("_", "").replace("-", "")
         for exe in exes:
             exe_name = os.path.basename(exe).lower().replace(".exe", "").replace(" ", "").replace("_", "").replace("-", "")
             if exe_name == clean_app or exe_name in clean_app or clean_app in exe_name:
                 return exe
+        return None
 
-        # 2. If no name match, pick the largest exe (most likely the game binary)
-        try:
-            exes_with_size = [(e, os.path.getsize(e)) for e in exes]
-            exes_with_size.sort(key=lambda x: x[1], reverse=True)
-            largest = exes_with_size[0][0]
-            logger.info(f"AppResolver: find_main_exe fallback to largest exe: {largest} ({exes_with_size[0][1] // 1024} KB)")
-            return largest
-        except Exception:
-            return exes[0] if exes else None
-
-    def is_game(self, process_exe: str) -> bool:
-        """Determines if the given executable path likely belongs to a game."""
-        if not process_exe:
-            return False
-        
-        path_lower = process_exe.lower()
-        
-        # 1. Check Steam paths
-        if "steamapps\\common" in path_lower:
-            return True
-            
-        # 2. Check Custom Game Dirs
-        for custom_dir in CUSTOM_GAME_DIRS:
-            if custom_dir.lower() in path_lower:
-                return True
-                
-        # 3. Check other common game launchers
-        if any(x in path_lower for x in ["xboxgames", "epic games", "riot games", "ea games", "ubisoft"]):
-            return True
-            
-        return False
-    
     def scan_steam_games(self) -> Dict[str, str]:
         games = {}
         steam_path = None
@@ -252,12 +176,10 @@ class AppResolver:
                     break
                     
         if not steam_path:
-            logger.warning("AppResolver: Steam not found in registry or common install paths.")
             return games
             
         lib_folders = [os.path.join(steam_path, "steamapps")]
         vdf_path = os.path.join(steam_path, "steamapps", "libraryfolders.vdf")
-        logger.info(f"AppResolver: Steam Base Path: {steam_path}")
         if os.path.exists(vdf_path):
             try:
                 with open(vdf_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -268,19 +190,14 @@ class AppResolver:
                     apps_path = os.path.join(p_norm, "steamapps")
                     if os.path.exists(apps_path) and apps_path not in lib_folders:
                         lib_folders.append(apps_path)
-            except Exception as e:
-                logger.warning(f"AppResolver: Error parsing libraryfolders.vdf: {e}")
+            except Exception:
+                pass
                 
-        logger.info(f"AppResolver: Found Steam Library Folders: {lib_folders}")
-
         for folder in lib_folders:
             if not os.path.exists(folder):
                 continue
-            manifests_found = 0
-            discovered_here = 0
             for file in os.listdir(folder):
                 if file.startswith("appmanifest_") and file.endswith(".acf"):
-                    manifests_found += 1
                     acf_path = os.path.join(folder, file)
                     try:
                         with open(acf_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -294,16 +211,9 @@ class AppResolver:
                             if os.path.exists(common_path):
                                 main_exe = self.find_main_exe(common_path, game_name)
                                 if main_exe:
-                                    logger.info(f"AppResolver: Discovered Steam Game: '{game_name}' -> {main_exe}")
                                     games[game_name.lower().strip()] = main_exe
-                                    discovered_here += 1
-                                else:
-                                    logger.info(f"AppResolver: No launchable exe matched for Steam game '{game_name}' in '{common_path}'")
-                            else:
-                                logger.info(f"AppResolver: Steam common path missing for '{game_name}': {common_path}")
-                    except Exception as e:
-                        logger.warning(f"AppResolver: Failed to parse {file}: {e}")
-            logger.info(f"AppResolver: Scanned {manifests_found} manifests in {folder}; discovered {discovered_here} games")
+                    except Exception:
+                        pass
         return games
 
     def scan_epic_games(self) -> Dict[str, str]:
@@ -330,54 +240,6 @@ class AppResolver:
                 pass
         return games
 
-    def scan_start_apps(self) -> Dict[str, str]:
-        if self.start_apps_cache:
-            return self.start_apps_cache
-            
-        apps = {}
-        try:
-            res = subprocess.run(['powershell', '-NoProfile', '-Command', 'Get-StartApps | Select-Object -Property Name, AppID | ConvertTo-Json'], capture_output=True, text=True, timeout=10)
-            if res.returncode == 0:
-                data = json.loads(res.stdout)
-                if isinstance(data, list):
-                    for item in data:
-                        name = item.get("Name")
-                        app_id = item.get("AppID")
-                        if name and app_id:
-                            apps[name.lower().strip()] = app_id
-                elif isinstance(data, dict):
-                    name = data.get("Name")
-                    app_id = data.get("AppID")
-                    if name and app_id:
-                        apps[name.lower().strip()] = app_id
-        except Exception as e:
-            logger.warning(f"Failed to scan Get-StartApps: {e}")
-            
-        self.start_apps_cache = apps
-        return apps
-        
-    def scan_custom_game_dirs(self) -> Dict[str, str]:
-        """Scans CUSTOM_GAME_DIRS for game folders and their main executables."""
-        games = {}
-        for root_dir in CUSTOM_GAME_DIRS:
-            if not os.path.exists(root_dir):
-                logger.warning(f"AppResolver: Custom game dir not found: {root_dir}")
-                continue
-            logger.info(f"AppResolver: Scanning custom game dir: {root_dir}")
-            try:
-                for item in os.listdir(root_dir):
-                    full_path = os.path.join(root_dir, item)
-                    if not os.path.isdir(full_path):
-                        continue
-                    main_exe = self.find_main_exe(full_path, item)
-                    if main_exe:
-                        logger.info(f"AppResolver: Custom game found: '{item}' -> {main_exe}")
-                        games[item.lower().strip()] = main_exe
-                    else:
-                        logger.warning(f"AppResolver: No main exe found for custom game dir: '{item}' in {root_dir}")
-            except Exception as e:
-                logger.warning(f"AppResolver: Error scanning custom game dir {root_dir}: {e}")
-        return games
     def resolve_app(self, app_name: str) -> Optional[str]:
         query = app_name.strip().lower()
         if not query:
@@ -410,36 +272,15 @@ class AppResolver:
             "edge": "msedge.exe",
             "vs code": "code.exe",
             "vscode": "code.exe",
-            "visual studio code": "code.exe",
-            "settings": "ms-settings:",
-            "windows settings": "ms-settings:",
-            "services": "services.msc",
-            "event viewer": "eventvwr.msc",
-            "resource monitor": "resmon.exe",
-            "performance monitor": "perfmon.exe",
-            "system information": "msinfo32.exe",
-            "character map": "charmap.exe",
-            "magnifier": "magnify.exe",
-            "on screen keyboard": "osk.exe",
-            "remote desktop": "mstsc.exe",
-            "task scheduler": "taskschd.msc",
-            "computer management": "compmgmt.msc",
-            "local security policy": "secpol.msc",
-            "group policy": "gpedit.msc",
+            "visual studio code": "code.exe"
         }
-
-        logger.info(f"AppResolver: [QUERY] '{query}'")
 
         # Layer 1: Persistent Cache
         if query in self.cache:
             cached_path = self.cache[query]
-            if self._is_preferred_target(cached_path) or self._is_app_id(cached_path):
-                logger.info(f"AppResolver: [CACHE HIT] Resolved '{app_name}' -> {cached_path}")
-                if self._is_preferred_target(cached_path):
-                    return cached_path
-                logger.info(f"AppResolver: Cache hit is AppID-style target for '{app_name}', continuing search for executable preference.")
-
-        logger.info(f"AppResolver: [CACHE MISS] '{app_name}' not in cache. Commencing discovery.")
+            if os.path.exists(cached_path) or not os.path.isabs(cached_path):
+                logger.info(f"AppResolver: Resolved '{app_name}' from Persistent Cache -> {cached_path}")
+                return cached_path
 
         # Check system utilities directly first (if they don't need absolute paths)
         if query in system_utilities:
@@ -489,14 +330,6 @@ class AppResolver:
             logger.info(f"AppResolver: Resolved '{app_name}' from Epic Games -> {path}")
             return path
 
-        # Layer 6.5: Custom Game Directories (e.g. D:\Reality Escape)
-        custom_games = self.scan_custom_game_dirs()
-        if query in custom_games:
-            path = custom_games[query]
-            self.add_to_cache(query, path)
-            logger.info(f"AppResolver: Resolved '{app_name}' from Custom Game Dirs -> {path}")
-            return path
-
         # Common hardcoded install locations for popular apps
         common_installations = {
             "chrome": [
@@ -506,15 +339,7 @@ class AppResolver:
             "discord": [
                 os.path.join(os.environ.get("LocalAppData", ""), "Discord\\Update.exe")
             ],
-            "vs code": [
-                os.path.join(os.environ.get("LocalAppData", ""), "Programs\\Microsoft VS Code\\Code.exe"),
-                "C:\\Program Files\\Microsoft VS Code\\Code.exe"
-            ],
             "vscode": [
-                os.path.join(os.environ.get("LocalAppData", ""), "Programs\\Microsoft VS Code\\Code.exe"),
-                "C:\\Program Files\\Microsoft VS Code\\Code.exe"
-            ],
-            "visual studio code": [
                 os.path.join(os.environ.get("LocalAppData", ""), "Programs\\Microsoft VS Code\\Code.exe"),
                 "C:\\Program Files\\Microsoft VS Code\\Code.exe"
             ]
@@ -528,10 +353,9 @@ class AppResolver:
 
         # Layer 7: Fuzzy / Substring Matching
         choices_map = {}
-        start_apps = self.scan_start_apps()
-        custom_games = self.scan_custom_game_dirs()
-        for d in [start_apps, system_utilities, registry_paths, start_menu_shortcuts, installed_apps, steam_games, epic_games, custom_games]:
-            self._merge_choices(choices_map, d)
+        for d in [system_utilities, registry_paths, start_menu_shortcuts, installed_apps, steam_games, epic_games]:
+            for k, v in d.items():
+                choices_map[k] = v
 
         choices = list(choices_map.keys())
         match_key = self.fuzzy_match_choices(query, choices)
@@ -556,11 +380,6 @@ class AppResolver:
         if selected_result:
             logger.info(f"[Resolver]\nQuery: {query}\nCandidates: {len(choices)}\nSelected result: {selected_result}\nResolution source: {resolution_source}")
             return selected_result
-
-        if query in self.cache and self._is_app_id(self.cache[query]):
-            fallback = self.cache[query]
-            logger.info(f"AppResolver: Falling back to cached AppID target for '{app_name}' -> {fallback}")
-            return fallback
             
         logger.warning(f"[Resolver]\nQuery: {query}\nCandidates: {len(choices)}\nSelected result: None\nResolution source: Failed")
         return None
@@ -580,20 +399,13 @@ class AppResolver:
                 return choice
 
         if HAS_RAPIDFUZZ:
-            logger.info(f"AppResolver: Running fuzzy matching for '{query}'...")
-            results = process.extract(query_clean, choices, scorer=fuzz.WRatio, limit=5)
-            
-            logger.info("AppResolver: Top candidates:")
-            for match_str, score, _ in results:
-                logger.info(f" - {match_str} (Score: {score:.1f})")
-                
-            best_match = results[0] if results else None
-            if best_match:
-                if best_match[1] >= threshold:
-                    logger.info(f"AppResolver: Selected '{best_match[0]}' (Score: {best_match[1]:.1f})")
-                    return best_match[0]
+            match = process.extractOne(query_clean, choices, scorer=fuzz.WRatio)
+            if match:
+                logger.info(f"AppResolver: Fuzzy match for '{query}' -> '{match[0]}' (Score: {match[1]:.1f})")
+                if match[1] >= threshold:
+                    return match[0]
                 else:
-                    logger.warning(f"AppResolver: All candidates rejected (Highest score {best_match[1]:.1f} below threshold {threshold})")
+                    logger.warning(f"AppResolver: Match rejected (below threshold {threshold})")
         else:
             choices_lower = [c.lower() for c in choices]
             matches = difflib.get_close_matches(query_clean, choices_lower, n=1, cutoff=threshold/100.0)

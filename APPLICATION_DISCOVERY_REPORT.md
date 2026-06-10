@@ -1,0 +1,402 @@
+=== Aurora Application Discovery Audit ===
+
+[Cached Applications]
+ - edge -> msedge.exe
+ - steam -> C:\Program Files (x86)\Steam\steam.exe
+ - discord -> C:\Users\ayush\AppData\Local\Discord\Update.exe
+ - valorant -> C:\Riot Games\VALORANT\Riot Client\RiotClientServices.exe
+ - notepad -> notepad.exe
+ - c:\program files (x86)\steam\steam.exe -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Steam\steam.exe
+ - c:\users\ayush\appdata\local\discord\update.exe -> com.squirrel.Discord.Discord
+ - vs code -> code.exe
+
+[Start Menu]
+ - brave -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Brave.lnk
+ - epic games launcher -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Epic Games Launcher.lnk
+ - excel -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Excel.lnk
+ - firefox private browsing -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Firefox Private Browsing.lnk
+ - firefox -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Firefox.lnk
+ - lenovo now -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Lenovo Now.lnk
+ - microsoft edge -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Microsoft Edge.lnk
+ - onedrive -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk
+ - onenote -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\OneNote.lnk
+ - powerpoint -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\PowerPoint.lnk
+ - safe exam browser -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Safe Exam Browser.lnk
+ - sticky notes (new) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Sticky Notes (new).lnk
+ - user guide -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\User Guide.lnk
+ - visual studio installer -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio Installer.lnk
+ - word -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Word.lnk
+ - wsl settings -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\WSL Settings.lnk
+ - wsl -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\WSL.lnk
+ - remote desktop connection -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Accessories\Remote Desktop Connection.lnk
+ - steps recorder -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Accessories\Steps Recorder.lnk
+ - windows media player legacy -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Accessories\Windows Media Player Legacy.lnk
+ - character map -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Accessories\System Tools\Character Map.lnk
+ - component services -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Component Services.lnk
+ - computer management -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Computer Management.lnk
+ - dfrgui -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\dfrgui.lnk
+ - disk cleanup -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Disk Cleanup.lnk
+ - event viewer -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Event Viewer.lnk
+ - iscsi initiator -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\iSCSI Initiator.lnk
+ - memory diagnostics tool -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Memory Diagnostics Tool.lnk
+ - odbc data sources (32-bit) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\ODBC Data Sources (32-bit).lnk
+ - odbc data sources (64-bit) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\ODBC Data Sources (64-bit).lnk
+ - performance monitor -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Performance Monitor.lnk
+ - recoverydrive -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\RecoveryDrive.lnk
+ - registry editor -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Registry Editor.lnk
+ - resource monitor -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Resource Monitor.lnk
+ - services -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\services.lnk
+ - system configuration -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\System Configuration.lnk
+ - system information -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\System Information.lnk
+ - task scheduler -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Task Scheduler.lnk
+ - windows defender firewall with advanced security -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Windows Defender Firewall with Advanced Security.lnk
+ - android studio -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Android Studio\Android Studio.lnk
+ - cheat engine (32-bit) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Cheat Engine (32-bit).lnk
+ - cheat engine (64-bit sse4-avx2) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Cheat Engine (64-bit SSE4-AVX2).lnk
+ - cheat engine (64-bit) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Cheat Engine (64-bit).lnk
+ - cheat engine help -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Cheat Engine help.lnk
+ - cheat engine tutorial (64-bit) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Cheat Engine tutorial (64-bit).lnk
+ - cheat engine tutorial -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Cheat Engine tutorial.lnk
+ - cheat engine -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Cheat Engine.lnk
+ - lua documentation -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Lua documentation.lnk
+ - reset settings -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Reset settings.lnk
+ - uninstall cheat engine -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Uninstall Cheat Engine.lnk
+ - unload kernel module -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine\Kernel stuff\Unload kernel module.lnk
+ - free download manager -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Free Download Manager\Free Download Manager.lnk
+ - uninstall free download manager -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Free Download Manager\Uninstall Free Download Manager.lnk
+ - git bash -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Git\Git Bash.lnk
+ - git cmd -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Git\Git CMD.lnk
+ - git gui -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Git\Git GUI.lnk
+ - git release notes -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Git\Git Release Notes.lnk
+ - hytale launcher -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Hytale Launcher\Hytale Launcher.lnk
+ - uninstall hytale launcher -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Hytale Launcher\Uninstall Hytale Launcher.lnk
+ - about java -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Java\About Java.lnk
+ - check for updates -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Java\Check For Updates.lnk
+ - configure java -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Java\Configure Java.lnk
+ - logmein hamachi -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\LogMeIn Hamachi\LogMeIn Hamachi.lnk
+ - uninstall -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Tesseract-OCR\Uninstall.lnk
+ - office language preferences -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Microsoft Office Tools\Office Language Preferences.lnk
+ - install additional tools for node.js -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Node.js\Install Additional Tools for Node.js.lnk
+ - node.js command prompt -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Node.js\Node.js command prompt.lnk
+ - node.js -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Node.js\Node.js.lnk
+ - uninstall node.js -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Node.js\Uninstall Node.js.lnk
+ - nvidia app -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\NVIDIA App.lnk
+ - visual profiler -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\CUDA Toolkit\v12.6\Visual Profiler.lnk
+ - nsight compute 2024.3.0 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\Nsight Compute 2024.3.0\Nsight Compute 2024.3.0.lnk
+ - uninstall nvidia nsight compute 2024.3.0 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\Nsight Compute 2024.3.0\Uninstall NVIDIA Nsight Compute 2024.3.0.lnk
+ - nsight systems 2024.4.2 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\Nsight Systems 2024.4.2\Nsight Systems 2024.4.2.lnk
+ - uninstall nvidia nsight systems 2024.4.2 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\Nsight Systems 2024.4.2\Uninstall NVIDIA Nsight Systems 2024.4.2.lnk
+ - nsight monitor -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\Nsight Visual Studio Edition 2024.3\Nsight Monitor.lnk
+ - nsight redistributable -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\NVIDIA Corporation\Nsight Visual Studio Edition 2024.3\Nsight Redistributable.lnk
+ - parsec -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Parsec\Parsec.lnk
+ - revo uninstaller help -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Revo Uninstaller\Revo Uninstaller Help.lnk
+ - revo uninstaller -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Revo Uninstaller\Revo Uninstaller.lnk
+ - uninstall revo uninstaller -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Revo Uninstaller\Uninstall Revo Uninstaller.lnk
+ - riot client -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Riot Games\Riot Client.lnk
+ - valorant -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Riot Games\VALORANT.lnk
+ - seb configuration tool -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\SafeExamBrowser\SEB Configuration Tool.lnk
+ - seb reset utility -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\SafeExamBrowser\SEB Reset Utility.lnk
+ - steam -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Steam\Steam.lnk
+ - sunshine -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Sunshine\Sunshine.lnk
+ - task manager -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\System Tools\Task Manager.lnk
+ - console -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Tesseract-OCR\Console.lnk
+ - dokumentation -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Tesseract-OCR\Dokumentation.lnk
+ - faq -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Tesseract-OCR\FAQ.lnk
+ - homepage -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Tesseract-OCR\Homepage.lnk
+ - readme -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Tesseract-OCR\ReadMe.lnk
+ - tlauncher -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\TLauncher\TLauncher.lnk
+ - debuggable package manager -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\Debuggable Package Manager.lnk
+ - developer command prompt for vs 2022 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\Developer Command Prompt for VS 2022.lnk
+ - developer powershell for vs 2022 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\Developer PowerShell for VS 2022.lnk
+ - x64 native tools command prompt for vs 2022 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\VC\x64 Native Tools Command Prompt for VS 2022.lnk
+ - x64_x86 cross tools command prompt for vs 2022 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\VC\x64_x86 Cross Tools Command Prompt for VS 2022.lnk
+ - x86 native tools command prompt for vs 2022 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\VC\x86 Native Tools Command Prompt for VS 2022.lnk
+ - x86_x64 cross tools command prompt for vs 2022 -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\VC\x86_x64 Cross Tools Command Prompt for VS 2022.lnk
+ - application verifier (x64) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Application Verifier (X64)\Application Verifier (X64).lnk
+ - application verifier (wow) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Application Verifier (X86)\Application Verifier (WOW).lnk
+ - windows app cert kit -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Windows App Certification Kit\Windows App Cert Kit.lnk
+ - documentation for desktop apps -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Windows Software Development Kit\Documentation for Desktop Apps.lnk
+ - documentation for uwp apps -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Windows Software Development Kit\Documentation for UWP Apps.lnk
+ - sample desktop apps -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Windows Software Development Kit\Sample Desktop Apps.lnk
+ - sample uwp apps -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Windows Software Development Kit\Sample UWP Apps.lnk
+ - tools for desktop apps -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Windows Software Development Kit\Tools for Desktop Apps.lnk
+ - tools for uwp apps -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Windows Software Development Kit\Tools for UWP Apps.lnk
+ - windows software development kit -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows Kits\Windows Software Development Kit\Windows Software Development Kit.lnk
+ - windows powershell ise (x86) -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows PowerShell\Windows PowerShell ISE (x86).lnk
+ - windows powershell ise -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Windows PowerShell\Windows PowerShell ISE.lnk
+ - console rar manual -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WinRAR\Console RAR manual.lnk
+ - what is new in the latest version -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WinRAR\What is new in the latest version.lnk
+ - winrar help -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WinRAR\WinRAR help.lnk
+ - winrar -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WinRAR\WinRAR.lnk
+ - uninstall wiztree -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\WizTree\Uninstall WizTree.lnk
+ - wiztree -> C:\ProgramData\Microsoft\Windows\Start Menu\Programs\WizTree\WizTree.lnk
+ - administrative tools -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Administrative Tools.lnk
+ - antigravity -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Antigravity\Antigravity.lnk
+ - canva -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Canva.lnk
+ - file explorer -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\File Explorer.lnk
+ - nahimic companion -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Nahimic Companion.lnk
+ - ollama -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Ollama.lnk
+ - opera gx browser -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Opera GX Browser.lnk
+ - squidservers -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\SquidServers.lnk
+ - wps office -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WPS Office.lnk
+ - wps pdf -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WPS PDF.lnk
+ - wps sheets -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WPS Sheets.lnk
+ - wps slides -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WPS Slides.lnk
+ - wps docs -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WPS Docs.lnk
+ - livecaptions -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Accessibility\LiveCaptions.lnk
+ - magnify -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Accessibility\Magnify.lnk
+ - narrator -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Accessibility\Narrator.lnk
+ - on-screen keyboard -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Accessibility\On-Screen Keyboard.lnk
+ - voiceaccess -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Accessibility\VoiceAccess.lnk
+ - antigravity ide -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Antigravity\Antigravity IDE.lnk
+ - spotify -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Brave Apps\Spotify.lnk
+ - cursor -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Cursor\Cursor.lnk
+ - discord -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Discord Inc\Discord.lnk
+ - game maps -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Overwolf\Game Maps.lnk
+ - overwolf -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Overwolf\Overwolf.lnk
+ - valorant tracker -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Overwolf\Valorant Tracker.lnk
+ - powertoys (preview) -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\PowerToys (Preview)\PowerToys (Preview).lnk
+ - idle (python 3.13 64-bit) -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Python 3.13\IDLE (Python 3.13 64-bit).lnk
+ - python 3.13 (64-bit) -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Python 3.13\Python 3.13 (64-bit).lnk
+ - python 3.13 manuals (64-bit) -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Python 3.13\Python 3.13 Manuals (64-bit).lnk
+ - python 3.13 module docs (64-bit) -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Python 3.13\Python 3.13 Module Docs (64-bit).lnk
+ - roblox player -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Roblox\Roblox Player.lnk
+ - roblox studio -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Roblox\Roblox Studio.lnk
+ - command prompt -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk
+ - control panel -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\System Tools\Control Panel.lnk
+ - run -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\System Tools\Run.lnk
+ - trae -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Trae\Trae.lnk
+ - visual studio code -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Visual Studio Code\Visual Studio Code.lnk
+ - dyad -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Will Chen\dyad.lnk
+ - windows powershell (x86) -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Windows PowerShell\Windows PowerShell (x86).lnk
+ - windows powershell -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Windows PowerShell\Windows PowerShell.lnk
+ - wps office configuration tools -> C:\Users\ayush\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\WPS Office\WPS Office Tools\WPS Office Configuration Tools.lnk
+
+[Steam Games]
+ - brawlhalla -> C:\Program Files (x86)\Steam\steamapps\common\Brawlhalla\Brawlhalla.exe
+
+[Epic Games]
+ - dnf duel -> C:\Program Files\Epic Games\DNFDUEL\DNFDUEL.exe
+ - rocket league® -> D:\Reality Escape\rocketleague\Binaries/Win64/Launcher.exe
+ - clone drone in the danger zone -> D:\Reality Escape\CloneDroneintheDangerZone\CDITDZ_Bootstrapper.exe
+
+[UWP / Xbox Apps]
+ - about java -> Microsoft.AutoGenerated.{A5E73466-E220-8EF4-B956-A582187356D9}
+ - aimlabs -> steam://rungameid/714010
+ - android studio -> {6D809377-6AF0-444B-8957-A3773F02200E}\Android\Android Studio\bin\studio64.exe
+ - angry birds 2 -> 1ED5AEA5.4160926B82DB_p2gbknwb5d8r2!App
+ - antigravity -> electron.app.Antigravity
+ - antigravity ide -> Google.AntigravityIDE
+ - application verifier (wow) -> {D65231B0-B2F1-4857-A4CE-A8E7C6EA7D27}\appverif.exe
+ - application verifier (x64) -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\appverif.exe
+ - brave -> Brave.IVY6EDXDHR3DFI37QWSJV2C4FI
+ - brawlhalla -> steam://rungameid/291550
+ - calculator -> Microsoft.WindowsCalculator_8wekyb3d8bbwe!App
+ - camera -> Microsoft.WindowsCamera_8wekyb3d8bbwe!App
+ - canva -> com.canva.CanvaDesktop
+ - character map -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\charmap.exe
+ - cheat engine -> {6D809377-6AF0-444B-8957-A3773F02200E}\Cheat Engine\Cheat Engine.exe
+ - cheat engine (32-bit) -> {6D809377-6AF0-444B-8957-A3773F02200E}\Cheat Engine\cheatengine-i386.exe
+ - cheat engine (64-bit sse4-avx2) -> {6D809377-6AF0-444B-8957-A3773F02200E}\Cheat Engine\cheatengine-x86_64-SSE4-AVX2.exe
+ - cheat engine (64-bit) -> {6D809377-6AF0-444B-8957-A3773F02200E}\Cheat Engine\cheatengine-x86_64.exe
+ - cheat engine help -> {6D809377-6AF0-444B-8957-A3773F02200E}\Cheat Engine\CheatEngine.chm
+ - cheat engine tutorial -> {6D809377-6AF0-444B-8957-A3773F02200E}\Cheat Engine\Tutorial-i386.exe
+ - cheat engine tutorial (64-bit) -> {6D809377-6AF0-444B-8957-A3773F02200E}\Cheat Engine\Tutorial-x86_64.exe
+ - check for updates -> Microsoft.AutoGenerated.{2F519BF2-C697-59F8-8F6A-1E19509CE66B}
+ - click to do -> MicrosoftWindows.Client.CoreAI_cw5n1h2txyewy!ClickToDoApp
+ - clock -> Microsoft.WindowsAlarms_8wekyb3d8bbwe!App
+ - codex -> OpenAI.Codex_2p2nqsd0c76g0!App
+ - command palette -> Microsoft.CommandPalette_8wekyb3d8bbwe!App
+ - command prompt -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\cmd.exe
+ - component services -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\comexp.msc
+ - computer management -> Microsoft.AutoGenerated.{8ABD94FB-E7D6-84A6-A997-C918EDDE0AE5}
+ - configure java -> {6D809377-6AF0-444B-8957-A3773F02200E}\Java\jre-1.8\bin\javacpl.exe
+ - console -> Microsoft.AutoGenerated.{49F182AE-BFD7-691D-F186-03BEE41E8345}
+ - console rar manual -> {6D809377-6AF0-444B-8957-A3773F02200E}\WinRAR\Rar.txt
+ - control panel -> Microsoft.Windows.ControlPanel
+ - copilot -> Microsoft.Copilot_8wekyb3d8bbwe!App
+ - cursor -> Anysphere.Cursor
+ - debuggable package manager -> Microsoft.AutoGenerated.{96690F80-0B7F-841E-E0DB-CC38AC5C839F}
+ - defragment and optimize drives -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\dfrgui.exe
+ - dev home -> Microsoft.Windows.DevHome_8wekyb3d8bbwe!App
+ - developer command prompt for vs 2022 -> Microsoft.AutoGenerated.{40811653-B1E1-D2FC-1404-AFC04D45190E}
+ - developer powershell for vs 2022 -> Microsoft.AutoGenerated.{68260876-B9BF-744A-06A4-BCD029354EEB}
+ - discord -> com.squirrel.Discord.Discord
+ - disk cleanup -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\cleanmgr.exe
+ - docker desktop -> Docker.DockerForWindows.Settings
+ - documentation for desktop apps -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Windows Kits\10\Shortcuts\DesktopAppsDocumentation.url
+ - documentation for uwp apps -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Windows Kits\10\Shortcuts\UWPAppsDocumentation.url
+ - dokumentation -> {6D809377-6AF0-444B-8957-A3773F02200E}\Tesseract-OCR\tesseract.1.html
+ - dyad -> com.squirrel.dyad.dyad
+ - echo point nova demo -> steam://rungameid/2398180
+ - epic games launcher -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Epic Games\Launcher\Portal\Binaries\Win32\EpicGamesLauncher.exe
+ - event viewer -> Microsoft.AutoGenerated.{BB044BFD-25B7-2FAA-22A8-6371A93E0456}
+ - excel -> Microsoft.Office.EXCEL.EXE.15
+ - family -> MicrosoftCorporationII.MicrosoftFamily_8wekyb3d8bbwe!App
+ - faq -> https://github.com/tesseract-ocr/tesseract/wiki/FAQ
+ - feedback hub -> Microsoft.WindowsFeedbackHub_8wekyb3d8bbwe!App
+ - file explorer -> Microsoft.Windows.Explorer
+ - firefox -> 308046B0AF4A39CB
+ - firefox private browsing -> 308046B0AF4A39CB;PrivateBrowsingAUMID
+ - free download manager -> FreeDownloadManager
+ - game bar -> Microsoft.XboxGamingOverlay_8wekyb3d8bbwe!App
+ - game maps -> overwolf.paohhbcnniemfkgbedlmepboghcpcapcncahjmll
+ - genshin impact interactive world map -> genshin-impact-map.appsample.com-9039B61F_ttscb0qcqsks0!App
+ - get help -> Microsoft.GetHelp_8wekyb3d8bbwe!App
+ - get started -> MicrosoftWindows.Client.CBS_cw5n1h2txyewy!WebExperienceHost
+ - git bash -> Microsoft.AutoGenerated.{0FDD9C6B-656B-0F1F-AB08-B1CDBB7067B3}
+ - git cmd -> Microsoft.AutoGenerated.{29591C0F-7C09-B655-C0EB-8544FCA7D1DE}
+ - git faqs (frequently asked questions) -> https://gitforwindows.org/faq
+ - git gui -> {6D809377-6AF0-444B-8957-A3773F02200E}\Git\cmd\git-gui.exe
+ - git release notes -> {6D809377-6AF0-444B-8957-A3773F02200E}\Git\ReleaseNotes.html
+ - homepage -> https://github.com/tesseract-ocr/tesseract
+ - hytale launcher -> {6D809377-6AF0-444B-8957-A3773F02200E}\Hypixel Studios\Hytale Launcher\hytale-launcher.exe
+ - idle (python 3.13 64-bit) -> Microsoft.AutoGenerated.{21B53DED-E7C0-1DFF-AD3F-40006A473CB7}
+ - install additional tools for node.js -> Microsoft.AutoGenerated.{04770C2D-34E6-BE94-EFAD-FA817237D6E9}
+ - iscsi initiator -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\iscsicpl.exe
+ - journal -> Microsoft.MicrosoftJournal_8wekyb3d8bbwe!App
+ - lenovo now -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Lenovo\LenovoNow\x86\LenovoNow.exe
+ - lenovo vantage -> E046963F.LenovoCompanion_k1h2ywk1493x8!App
+ - linkedin -> 7EE7776C.LinkedInforWindows_w1wdnht996qgy!App
+ - live captions -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\LiveCaptions.exe
+ - lizardbyte support -> https://app.lizardbyte.dev/support
+ - lizardbyte web site -> https://app.lizardbyte.dev
+ - logmein hamachi -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\LogMeIn Hamachi\hamachi-2-ui.exe
+ - lua documentation -> Microsoft.AutoGenerated.{DFD0C44B-3A90-73BF-36B8-A69FF1090BCD}
+ - magnifier -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\magnify.exe
+ - media player -> Microsoft.ZuneMusic_8wekyb3d8bbwe!Microsoft.ZuneMusic
+ - microsoft 365 copilot -> Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe!Microsoft.MicrosoftOfficeHub
+ - microsoft clipchamp -> Clipchamp.Clipchamp_yxz26nhyzhsrt!App
+ - microsoft edge -> MSEdge
+ - microsoft store -> Microsoft.WindowsStore_8wekyb3d8bbwe!App
+ - microsoft teams -> MSTeams_8wekyb3d8bbwe!MSTeams
+ - microsoft to do -> Microsoft.Todos_8wekyb3d8bbwe!App
+ - microsoft whiteboard -> Microsoft.Whiteboard_8wekyb3d8bbwe!Whiteboard
+ - minecraft launcher -> Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft
+ - nahimic -> A-Volute.Nahimic_w2gh52qy24etm!App
+ - nahimic companion -> A-Volute.NahimicCompanion.nahimic
+ - narrator -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\narrator.exe
+ - news -> Microsoft.BingNews_8wekyb3d8bbwe!AppexNews
+ - node.js -> {6D809377-6AF0-444B-8957-A3773F02200E}\nodejs\node.exe
+ - node.js command prompt -> Microsoft.AutoGenerated.{499EE7CA-7ED5-EBC9-AB09-80DC143D7B90}
+ - node.js documentation -> https://nodejs.org/download/release/v22.19.0/docs/api/
+ - node.js website -> https://nodejs.org/
+ - notepad -> Microsoft.WindowsNotepad_8wekyb3d8bbwe!App
+ - nsight compute 2024.3.0 -> {6D809377-6AF0-444B-8957-A3773F02200E}\NVIDIA Corporation\Nsight Compute 2024.3.0\host\windows-desktop-win7-x64\ncu-ui.exe
+ - nsight monitor -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\NVIDIA Corporation\Nsight Visual Studio Edition 2024.3\Monitor\Common\Nsight.Monitor.exe
+ - nsight redistributable -> C:\ProgramData\NVIDIA Corporation\Nsight\nsight_vse\nsight_visual_studio_edition-windows-x86_64-2024.3.0.24164_34412248.msi
+ - nsight systems 2024.4.2 -> {6D809377-6AF0-444B-8957-A3773F02200E}\NVIDIA Corporation\Nsight Systems 2024.4.2\host-windows-x64\nsys-ui.exe
+ - nvidia app -> com.nvidia.nvapp
+ - nvidia control panel -> NVIDIACorp.NVIDIAControlPanel_56jybvy8sckqj!NVIDIACorp.NVIDIAControlPanel
+ - odbc data sources (32-bit) -> {D65231B0-B2F1-4857-A4CE-A8E7C6EA7D27}\odbcad32.exe
+ - odbc data sources (64-bit) -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\odbcad32.exe
+ - office language preferences -> Microsoft.Office.SETLANG.EXE.15
+ - ollama -> C:\Users\ayush\AppData\Local\Programs\Ollama\ollama app.exe
+ - onedrive -> Microsoft.SkyDrive.Desktop
+ - onenote -> Microsoft.Office.ONENOTE.EXE.15
+ - on-screen keyboard -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\osk.exe
+ - opera gx browser -> OperaSoftware.OperaGXWebBrowser.1753006905
+ - outlook -> Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows
+ - overwolf -> Overwolf.Client
+ - paint -> Microsoft.Paint_8wekyb3d8bbwe!App
+ - parsec -> {6D809377-6AF0-444B-8957-A3773F02200E}\Parsec\parsecd.exe
+ - performance monitor -> Microsoft.AutoGenerated.{8AA47365-B2B3-1961-69EB-F866E376B12F}
+ - phone link -> Microsoft.YourPhone_8wekyb3d8bbwe!App
+ - photos -> Microsoft.Windows.Photos_8wekyb3d8bbwe!App
+ - power automate -> Microsoft.PowerAutomateDesktop_8wekyb3d8bbwe!PAD.Console
+ - power automate troubleshooter -> Microsoft.PowerAutomateDesktop_8wekyb3d8bbwe!PAD.Troubleshooter
+ - powerpoint -> Microsoft.Office.POWERPNT.EXE.15
+ - powertoys (preview) -> Microsoft.PowerToysWin32
+ - python 3.13 (64-bit) -> C:\Users\ayush\AppData\Local\Programs\Python\Python313\python.exe
+ - python 3.13 manuals (64-bit) -> C:\Users\ayush\AppData\Local\Programs\Python\Python313\Doc\html\index.html
+ - python 3.13 module docs (64-bit) -> Microsoft.AutoGenerated.{4B6B7E31-68F5-B21B-9BCC-A5910B1617B5}
+ - quick assist -> MicrosoftCorporationII.QuickAssist_8wekyb3d8bbwe!App
+ - readme -> https://github.com/tesseract-ocr/tesseract/wiki/ReadMe
+ - recovery drive -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\RecoveryDrive.exe
+ - registry editor -> {F38BF404-1D43-42F2-9305-67DE0B28FC23}\regedit.exe
+ - remote desktop connection -> Microsoft.Windows.RemoteDesktop
+ - reset settings -> {6D809377-6AF0-444B-8957-A3773F02200E}\Cheat Engine\ceregreset.exe
+ - resource monitor -> Microsoft.AutoGenerated.{C804BBA7-FA5F-CBF7-8B55-2096E5F972CB}
+ - revo uninstaller -> {6D809377-6AF0-444B-8957-A3773F02200E}\VS Revo Group\Revo Uninstaller\RevoUnin.exe
+ - revo uninstaller help -> {6D809377-6AF0-444B-8957-A3773F02200E}\VS Revo Group\Revo Uninstaller\Revo Uninstaller Help.pdf
+ - revo uninstaller on the web -> https://www.revouninstaller.com/
+ - riot client -> C:\Riot Games\VALORANT\Riot Client\RiotClientServices.exe
+ - roblox player -> C:\Users\ayush\AppData\Local\Roblox\Versions\version-225e87fdb7254f64\RobloxPlayerBeta.exe
+ - roblox studio -> C:\Users\ayush\AppData\Local\Roblox\Versions\RobloxStudioInstaller.exe
+ - run -> Microsoft.Windows.Shell.RunDialog
+ - safe exam browser -> {6D809377-6AF0-444B-8957-A3773F02200E}\SafeExamBrowser\Application\SafeExamBrowser.exe
+ - sample desktop apps -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Windows Kits\10\Shortcuts\DesktopAppsSamples.url
+ - sample uwp apps -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Windows Kits\10\Shortcuts\UWPAppsSamples.url
+ - seb configuration tool -> {6D809377-6AF0-444B-8957-A3773F02200E}\SafeExamBrowser\Configuration\SEBConfigTool.exe
+ - seb reset utility -> {6D809377-6AF0-444B-8957-A3773F02200E}\SafeExamBrowser\Reset\SafeExamBrowser.ResetUtility.exe
+ - services -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\services.msc
+ - settings -> windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel
+ - snipping tool -> Microsoft.ScreenSketch_8wekyb3d8bbwe!App
+ - solitaire & casual games -> Microsoft.MicrosoftSolitaireCollection_8wekyb3d8bbwe!App
+ - sound recorder -> Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe!App
+ - spotify -> Brave._crx_pjibgcllelbfgfagdaldikeohf
+ - squidservers -> com.squidservers.app
+ - steam -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Steam\steam.exe
+ - steam support center -> http://support.steampowered.com/
+ - steps recorder -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\psr.exe
+ - sticky notes -> Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe!App
+ - sticky notes (new) -> Microsoft.Office.OneNote.MemoryPreview
+ - sunshine -> Microsoft.AutoGenerated.{F615383F-1975-4EE5-3100-85BAD8282668}
+ - sunshine documentation -> https://docs.lizardbyte.dev/projects/sunshine
+ - system configuration -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\msconfig.exe
+ - system information -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\msinfo32.exe
+ - task manager -> Microsoft.AutoGenerated.{923DD477-5846-686B-A659-0FCCD73851A8}
+ - task scheduler -> Microsoft.AutoGenerated.{C1C6F8AC-40A3-0F5C-146F-65A9DC70BBB4}
+ - terminal -> Microsoft.WindowsTerminal_8wekyb3d8bbwe!App
+ - the finals -> steam://rungameid/2073850
+ - tlauncher -> C:\Users\ayush\AppData\Roaming\.minecraft\TLauncher.exe
+ - tools for desktop apps -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Windows Kits\10\Shortcuts\DesktopAppsToolsDocumentation.url
+ - tools for uwp apps -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Windows Kits\10\Shortcuts\UWPAppsToolsDocumentation.url
+ - trae -> ByteDance.Trae
+ - ultimate tic-tac-toe -> steam://rungameid/360870
+ - uninstall -> Microsoft.AutoGenerated.{C7BFDE94-C36D-B79B-0837-D71DEE5388DD}
+ - uninstall hytale launcher -> {6D809377-6AF0-444B-8957-A3773F02200E}\Hypixel Studios\Hytale Launcher\uninstall.exe
+ - uninstall node.js -> Microsoft.AutoGenerated.{F0AEBF86-2E0F-57B4-6C6F-3F8C38FC6EC9}
+ - uninstall nvidia nsight compute 2024.3.0 -> Microsoft.AutoGenerated.{A3135211-3C99-9BC3-E211-6B26BFC14D65}
+ - uninstall nvidia nsight systems 2024.4.2 -> Microsoft.AutoGenerated.{1C5A3ACD-B44E-7938-DA17-3606F6B6E29A}
+ - unload kernel module -> {6D809377-6AF0-444B-8957-A3773F02200E}\Cheat Engine\Kernelmoduleunloader.exe
+ - user guide -> Microsoft.AutoGenerated.{C44BCC92-8357-CB62-D548-D84D670C490F}
+ - valorant -> Microsoft.AutoGenerated.{258122CF-9DD7-B11A-CD85-F0FD5B52A0D2}
+ - valorant tracker -> overwolf.ipmlnnogholfmdmenfijjifldcpjoecappfccceh
+ - visit java.com -> https://java.com/
+ - visual profiler -> {6D809377-6AF0-444B-8957-A3773F02200E}\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin\nvvp.bat
+ - visual studio code -> Microsoft.VisualStudioCode
+ - visual studio installer -> Microsoft.VisualStudio.Installer
+ - voice access -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\voiceaccess.exe
+ - weather -> Microsoft.BingWeather_8wekyb3d8bbwe!App
+ - what is new in the latest version -> {6D809377-6AF0-444B-8957-A3773F02200E}\WinRAR\WhatsNew.txt
+ - whatsapp -> 5319275A.WhatsAppDesktop_cv1g1gvanyjgm!App
+ - windows app cert kit -> {7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}\Windows Kits\10\App Certification Kit\appcertui.exe
+ - windows backup -> MicrosoftWindows.Client.CBS_cw5n1h2txyewy!WindowsBackup
+ - windows defender firewall with advanced security -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WF.msc
+ - windows media player legacy -> Microsoft.Windows.MediaPlayer32
+ - windows memory diagnostic -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\MdSched.exe
+ - windows powershell -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe
+ - windows powershell (x86) -> {D65231B0-B2F1-4857-A4CE-A8E7C6EA7D27}\WindowsPowerShell\v1.0\powershell.exe
+ - windows powershell ise -> {1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\PowerShell_ISE.exe
+ - windows powershell ise (x86) -> {D65231B0-B2F1-4857-A4CE-A8E7C6EA7D27}\WindowsPowerShell\v1.0\PowerShell_ISE.exe
+ - windows security -> Microsoft.SecHealthUI_8wekyb3d8bbwe!SecHealthUI
+ - windows software development kit -> Microsoft.AutoGenerated.{3B6E7DF3-19A3-70DB-96F6-86E65A17E61C}
+ - windows tools -> Microsoft.Windows.AdministrativeTools
+ - winrar -> {6D809377-6AF0-444B-8957-A3773F02200E}\WinRAR\WinRAR.exe
+ - winrar help -> {6D809377-6AF0-444B-8957-A3773F02200E}\WinRAR\WinRAR.chm
+ - wiztree -> {6D809377-6AF0-444B-8957-A3773F02200E}\WizTree\WizTree64.exe
+ - word -> Microsoft.Office.WINWORD.EXE.15
+ - wps office -> Kingsoft.Office.KPrometheus
+ - wps office configuration tools -> C:\Users\ayush\AppData\Local\Kingsoft\WPS Office\12.1.0.26880\office6\ksomisc.exe
+ - wps pdf -> Kingsoft.Office.PDF
+ - wps sheets -> Kingsoft.Office.ET
+ - wps slides -> Kingsoft.Office.WPP
+ - wpsÿdocs -> Kingsoft.Office.WPS
+ - wsl -> Microsoft.WSL
+ - wsl settings -> {6D809377-6AF0-444B-8957-A3773F02200E}\WSL\wslsettings\wslsettings.exe
+ - x64 native tools command prompt for vs 2022 -> Microsoft.AutoGenerated.{EEE53C58-9AEE-6DD6-73D6-CB0EAD7994EE}
+ - x64_x86 cross tools command prompt for vs 2022 -> Microsoft.AutoGenerated.{E412FBE8-CEAD-50C6-51F8-AB1A3A3E0561}
+ - x86 native tools command prompt for vs 2022 -> Microsoft.AutoGenerated.{0B62964F-8E39-52B4-D1C2-94F8278FD830}
+ - x86_x64 cross tools command prompt for vs 2022 -> Microsoft.AutoGenerated.{900A5EAF-5D0D-EBEA-0616-3CB37D408F71}
+ - xbox -> Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App
